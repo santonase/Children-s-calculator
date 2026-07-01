@@ -142,7 +142,7 @@ body {
 .rocket-track {
   position: relative;
   height: 64px;
-  margin: 4px 0 4px;
+  margin: 48px 0 4px;
 }
 .track-line {
   position: absolute;
