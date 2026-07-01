@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Дитячий калькулятор 🚀</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="sky" id="sky"></div>
+
+<div class="app">
+
+  <!-- Екран вибору операції -->
+  <section id="menu-screen" class="screen active">
+    <h1 class="title">Дитячий<br>калькулятор</h1>
+    <p class="subtitle">Обери, що будемо вивчати</p>
+
+    <div class="menu-grid">
+      <button class="mode-card" data-op="add">
+        <span class="mode-icon">➕</span>
+        <span class="mode-label">Додавання</span>
+      </button>
+      <button class="mode-card" data-op="sub">
+        <span class="mode-icon">➖</span>
+        <span class="mode-label">Віднімання</span>
+      </button>
+      <button class="mode-card" data-op="mul">
+        <span class="mode-icon">✖️</span>
+        <span class="mode-label">Множення</span>
+      </button>
+      <button class="mode-card" data-op="div">
+        <span class="mode-icon">➗</span>
+        <span class="mode-label">Ділення</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Екран гри -->
+  <section id="game-screen" class="screen">
+    <button id="back-btn" class="back-btn" aria-label="Назад">←</button>
+
+    <div class="rocket-track">
+      <div class="rocket" id="rocket">🚀</div>
+      <div class="track-line"></div>
+    </div>
+
+    <div class="score-row">
+      <span id="score-label">0 / 10</span>
+    </div>
+
+    <div class="problem-card">
+      <span id="num-a">0</span>
+      <span id="op-sign">+</span>
+      <span id="num-b">0</span>
+      <span class="eq">=</span>
+      <span id="answer-slot">?</span>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+
+    <div class="choices-grid" id="choices-grid"></div>
+  </section>
+
+  <!-- Екран результату -->
+  <section id="result-screen" class="screen">
+    <div class="result-rocket">🚀</div>
+    <h2 id="result-title">Молодець!</h2>
+    <p id="result-text">Ти відповів правильно 10 з 10 разів!</p>
+    <button class="primary-btn" id="play-again-btn">Грати ще раз</button>
+    <button class="secondary-btn" id="menu-btn">До меню</button>
+  </section>
+
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>

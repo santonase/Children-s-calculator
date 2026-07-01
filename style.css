@@ -1,0 +1,279 @@
+:root {
+  --bg-space: #1B1F3B;
+  --bg-space-2: #12142B;
+  --coral: #FF6B4A;
+  --mint: #4ECDC4;
+  --amber: #FFD166;
+  --white: #FDFBF7;
+  --card: #262B52;
+  --text-dim: #A6A9C8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-space);
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  color: var(--white);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Зоряне небо */
+.sky {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(1px 1px at 10% 20%, white, transparent),
+    radial-gradient(1px 1px at 80% 10%, white, transparent),
+    radial-gradient(2px 2px at 30% 60%, white, transparent),
+    radial-gradient(1px 1px at 70% 80%, white, transparent),
+    radial-gradient(1px 1px at 90% 40%, white, transparent),
+    radial-gradient(1px 1px at 45% 90%, white, transparent),
+    radial-gradient(2px 2px at 60% 30%, white, transparent),
+    radial-gradient(1px 1px at 15% 75%, white, transparent);
+  background-repeat: repeat;
+  background-size: 300px 300px;
+  opacity: 0.6;
+  z-index: 0;
+  animation: drift 60s linear infinite;
+}
+
+@keyframes drift {
+  from { background-position: 0 0; }
+  to { background-position: -300px 300px; }
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top, 24px) 20px env(safe-area-inset-bottom, 24px);
+}
+
+.screen {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.screen.active { display: flex; }
+
+/* --- Меню --- */
+#menu-screen {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.title {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 2.6rem;
+  line-height: 1.1;
+  color: var(--amber);
+  text-shadow: 0 4px 0 rgba(0,0,0,0.2);
+}
+
+.subtitle {
+  color: var(--text-dim);
+  font-weight: 700;
+  margin-bottom: 24px;
+  font-size: 1.05rem;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+}
+
+.mode-card {
+  background: var(--card);
+  border: none;
+  border-radius: 24px;
+  padding: 28px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--white);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.mode-card:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+}
+.mode-icon { font-size: 2.4rem; }
+
+/* --- Гра --- */
+#game-screen { position: relative; padding-top: 8px; }
+
+.back-btn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--card);
+  border: none;
+  color: var(--white);
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  z-index: 3;
+}
+
+.rocket-track {
+  position: relative;
+  height: 90px;
+  margin: 8px 0 4px;
+}
+.track-line {
+  position: absolute;
+  bottom: 8px;
+  left: 0; right: 0;
+  height: 2px;
+  background: repeating-linear-gradient(to right, var(--text-dim) 0 8px, transparent 8px 16px);
+  opacity: 0.35;
+}
+.rocket {
+  position: absolute;
+  bottom: 8px;
+  left: 0%;
+  font-size: 2.2rem;
+  transition: left 0.6s cubic-bezier(.34,1.56,.64,1);
+  transform: translateX(-50%) rotate(90deg);
+}
+
+.score-row {
+  text-align: center;
+  color: var(--text-dim);
+  font-weight: 800;
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+#score-label { color: var(--amber); }
+
+.problem-card {
+  background: var(--card);
+  border-radius: 24px;
+  padding: 28px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 2.6rem;
+  margin-bottom: 14px;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+}
+#answer-slot {
+  color: var(--coral);
+  min-width: 1.2ch;
+  text-align: center;
+}
+.eq { color: var(--text-dim); }
+
+.feedback {
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  min-height: 1.6rem;
+  margin-bottom: 8px;
+  transition: opacity 0.2s ease;
+}
+.feedback.correct { color: var(--mint); }
+.feedback.wrong { color: var(--amber); }
+
+.choices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: auto;
+  padding-bottom: 8px;
+}
+
+.choice-btn {
+  background: var(--card);
+  border: none;
+  border-radius: 20px;
+  color: var(--white);
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  padding: 22px 0;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+.choice-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+}
+.choice-btn.correct-flash { background: var(--mint); color: var(--bg-space-2); }
+.choice-btn.wrong-flash { background: var(--amber); color: var(--bg-space-2); }
+.choice-btn.disabled { pointer-events: none; opacity: 0.5; }
+
+/* --- Результат --- */
+#result-screen {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+.result-rocket {
+  font-size: 4rem;
+  margin-bottom: 4px;
+}
+#result-title {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 2rem;
+  color: var(--amber);
+}
+#result-text {
+  color: var(--text-dim);
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.primary-btn, .secondary-btn {
+  width: 100%;
+  border: none;
+  border-radius: 18px;
+  padding: 18px 0;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+.primary-btn {
+  background: var(--coral);
+  color: var(--white);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+  margin-bottom: 12px;
+}
+.primary-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.secondary-btn {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sky { animation: none; }
+  .rocket { transition: none; }
+}
