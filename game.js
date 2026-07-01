@@ -89,6 +89,7 @@ const scoreLabelEl = document.getElementById('score-label');
 const feedbackEl = document.getElementById('feedback');
 const choicesGridEl = document.getElementById('choices-grid');
 const rocketEl = document.getElementById('rocket');
+const trackFillEl = document.getElementById('track-fill');
 
 function renderProblem() {
   const { a, b, answer } = generateProblem(state.op);
@@ -122,6 +123,7 @@ function updateScoreLabel() {
 function updateRocketPosition() {
   const pct = (state.round / TOTAL_QUESTIONS) * 92; // залишаємо запас справа
   rocketEl.style.left = `calc(${pct}% + 4%)`;
+  trackFillEl.style.width = `calc(${pct}% + 4%)`;
 }
 
 function handleAnswer(choice, btn) {
@@ -191,6 +193,7 @@ function startRound(op) {
   state.round = 0;
   state.score = 0;
   rocketEl.style.left = '4%';
+  trackFillEl.style.width = '4%';
   showScreen('game');
   renderProblem();
 }

@@ -152,6 +152,16 @@ body {
   background: repeating-linear-gradient(to right, var(--text-dim) 0 8px, transparent 8px 16px);
   opacity: 0.35;
 }
+.track-fill {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: repeating-linear-gradient(to right, var(--amber) 0 8px, transparent 8px 16px);
+  transition: width 0.6s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 0 6px rgba(255, 209, 102, 0.6);
+}
 .rocket {
   position: absolute;
   bottom: 8px;
