@@ -14,12 +14,75 @@ const OP_CONFIG = {
   div: { sign: '÷', label: 'Ділення' },
 };
 
+const LEVEL_META = {
+  1: { icon: '🔢', name: 'Таблиця', hint: 'Прості приклади' },
+  2: { icon: '❓', name: 'Пропущене число', hint: 'Знайди невідоме' },
+  3: { icon: '📖', name: 'Задачі', hint: 'Космічні історії' },
+};
+
+const WORD_TEMPLATES = {
+  add: [
+    'У капітана було {a} зірок, він знайшов ще {b}. Скільки зірок у нього тепер?',
+    'На кораблі летіло {a} астронавтів, приєдналося ще {b}. Скільки астронавтів разом?',
+    'Робот зібрав {a} метеоритів вранці і {b} ввечері. Скільки метеоритів усього?',
+    'На станції було {a} супутники, запустили ще {b}. Скільки супутників стало?',
+    'Інопланетянин мав {a} кристали, знайшов ще {b}. Скільки кристалів тепер?',
+    'Екіпаж побачив {a} комети, потім ще {b}. Скільки комет побачили всього?',
+    'У ракети було {a} баки з паливом, додали ще {b}. Скільки баків стало?',
+    'На планеті жило {a} роботів, прилетіло ще {b}. Скільки роботів тепер?',
+    'Астронавт зробив {a} фото зірок і ще {b} фото планет. Скільки фото всього?',
+    'У космічному саду росло {a} рослини, посадили ще {b}. Скільки рослин стало?',
+  ],
+  sub: [
+    'У ракети було {a} палива, витрачено {b}. Скільки палива лишилось?',
+    'Капітан мав {a} зірок на карті, {b} зникли. Скільки зірок лишилось?',
+    'На станції було {a} космонавти, {b} полетіли додому. Скільки лишилось?',
+    'Робот зібрав {a} каменів, {b} загубив. Скільки каменів лишилось?',
+    'У кораблі було {a} відра з водою, {b} використали. Скільки лишилось?',
+    'Інопланетянин мав {a} монет, витратив {b}. Скільки монет лишилось?',
+    'На небі було {a} видимих зірок, {b} сховались за хмари. Скільки видно тепер?',
+    'У бортовому журналі було {a} записів, {b} стерли. Скільки записів лишилось?',
+    'Екіпаж мав {a} скафандри, {b} пошкодились. Скільки цілих лишилось?',
+    'На орбіті було {a} супутники, {b} згоріли. Скільки супутників лишилось?',
+  ],
+  mul: [
+    'На кожній з {a} планет живе {b} інопланетян. Скільки всього інопланетян?',
+    'У {a} ракетах по {b} космонавтів. Скільки космонавтів усього?',
+    'Робот розклав {a} ряди по {b} зірки в кожному. Скільки зірок усього?',
+    'На {a} кораблях по {b} відсіки. Скільки відсіків усього?',
+    'У {a} скафандрах по {b} кишень. Скільки кишень усього?',
+    'На кожній з {a} станцій живе {b} роботи. Скільки роботів усього?',
+    'У {a} ящиках по {b} метеоритів. Скільки метеоритів усього?',
+    'На {a} орбітах по {b} супутники. Скільки супутників усього?',
+    'У {a} галактиках по {b} нових зірки. Скільки зірок усього?',
+    'На {a} планетах по {b} озера. Скільки озер усього?',
+  ],
+  div: [
+    '{a} метеоритів розділили рівно між {b} космонавтами. Скільки отримав кожен?',
+    '{a} зірок розкидали рівно по {b} сузір’ях. Скільки зірок у кожному?',
+    '{a} космонавтів розсадили рівно у {b} ракети. Скільки в кожній ракеті?',
+    '{a} кристалів поділили рівно між {b} інопланетянами. Скільки отримав кожен?',
+    '{a} роботів розподілили рівно по {b} станціях. Скільки роботів на станції?',
+    '{a} банок з паливом розділили рівно на {b} кораблі. Скільки банок на корабель?',
+    '{a} фотографій розклали рівно у {b} альбоми. Скільки фото в альбомі?',
+    '{a} скафандрів розділили рівно між {b} екіпажами. Скільки скафандрів на екіпаж?',
+    '{a} монет розділили рівно між {b} планетами. Скільки монет на планету?',
+    '{a} каменів розклали рівно у {b} мішки. Скільки каменів у мішку?',
+  ],
+};
+
 let state = {
   op: 'add',
+  level: 1,
   round: 0,
   score: 0,
   currentAnswer: null,
+  missingSlot: 'answer',
+  currentA: null,
+  currentB: null,
 };
+
+let currentProfile = null;
 
 // ----- Профілі: збереження/завантаження -----
 function loadProfiles() {
@@ -51,6 +114,7 @@ function createProfile(name, avatar) {
     id: 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     name: name.trim() || 'Гравець',
     avatar,
+    progress: { add: { unlockedLevel: 1 }, sub: { unlockedLevel: 1 }, mul: { unlockedLevel: 1 }, div: { unlockedLevel: 1 } },
   };
   profiles.push(profile);
   saveProfiles(profiles);
@@ -58,13 +122,51 @@ function createProfile(name, avatar) {
   return profile;
 }
 
+function getUnlockedLevel(profile, op) {
+  return (profile.progress && profile.progress[op] && profile.progress[op].unlockedLevel) || 1;
+}
+
+function updateProfile(profile) {
+  const profiles = loadProfiles();
+  const idx = profiles.findIndex(p => p.id === profile.id);
+  if (idx > -1) {
+    profiles[idx] = profile;
+    saveProfiles(profiles);
+  }
+}
+
+function maybeUnlockNextLevel(profile, op, playedLevel, score) {
+  if (!profile.progress) profile.progress = {};
+  if (!profile.progress[op]) profile.progress[op] = { unlockedLevel: 1 };
+
+  const unlocked = profile.progress[op].unlockedLevel;
+  if (playedLevel === unlocked && playedLevel < 3 && score >= 8) {
+    profile.progress[op].unlockedLevel = playedLevel + 1;
+    updateProfile(profile);
+    return playedLevel + 1;
+  }
+  return null;
+}
+
 // ----- Екрани -----
 const screens = {
   profile: document.getElementById('profile-screen'),
   menu: document.getElementById('menu-screen'),
+  level: document.getElementById('level-screen'),
   game: document.getElementById('game-screen'),
   result: document.getElementById('result-screen'),
 };
+
+// ----- Toast -----
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+
+function showToast(message) {
+  toastEl.textContent = message;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+}
 
 function showScreen(name) {
   Object.values(screens).forEach(s => s.classList.remove('active'));
@@ -100,6 +202,17 @@ function generateProblem(op) {
   return { a, b, answer };
 }
 
+function pickMissingSlot() {
+  const slots = ['a', 'b', 'answer'];
+  return slots[randInt(0, 2)];
+}
+
+function fillWordTemplate(op, a, b) {
+  const templates = WORD_TEMPLATES[op];
+  const template = templates[randInt(0, templates.length - 1)];
+  return template.replace('{a}', a).replace('{b}', b);
+}
+
 function generateChoices(answer, op) {
   const choices = new Set([answer]);
   const spread = op === 'mul' || op === 'div' ? Math.max(4, Math.round(answer * 0.3)) : 4;
@@ -132,19 +245,37 @@ const feedbackEl = document.getElementById('feedback');
 const choicesGridEl = document.getElementById('choices-grid');
 const rocketEl = document.getElementById('rocket');
 const trackFillEl = document.getElementById('track-fill');
+const problemCardEl = document.getElementById('problem-card');
+const wordViewEl = document.getElementById('word-view');
 
 function renderProblem() {
   const { a, b, answer } = generateProblem(state.op);
-  state.currentAnswer = answer;
+  const sign = OP_CONFIG[state.op].sign;
 
-  numAEl.textContent = a;
-  numBEl.textContent = b;
-  opSignEl.textContent = OP_CONFIG[state.op].sign;
-  answerSlotEl.textContent = '?';
   feedbackEl.textContent = '';
   feedbackEl.className = 'feedback';
 
-  const choices = generateChoices(answer, state.op);
+  if (state.level === 3) {
+    // Текстова задача: завжди шукаємо результат
+    problemCardEl.classList.add('word-mode');
+    wordViewEl.textContent = fillWordTemplate(state.op, a, b);
+    state.currentAnswer = answer;
+  } else {
+    problemCardEl.classList.remove('word-mode');
+
+    let missing = 'answer';
+    if (state.level === 2) missing = pickMissingSlot();
+    state.missingSlot = missing;
+
+    numAEl.textContent = missing === 'a' ? '?' : a;
+    opSignEl.textContent = sign;
+    numBEl.textContent = missing === 'b' ? '?' : b;
+    answerSlotEl.textContent = missing === 'answer' ? '?' : answer;
+
+    state.currentAnswer = missing === 'a' ? a : missing === 'b' ? b : answer;
+  }
+
+  const choices = generateChoices(state.currentAnswer, state.op);
   choicesGridEl.innerHTML = '';
   choices.forEach(choice => {
     const btn = document.createElement('button');
@@ -190,7 +321,11 @@ function handleAnswer(choice, btn) {
     });
   }
 
-  answerSlotEl.textContent = state.currentAnswer;
+  if (state.level !== 3) {
+    if (state.missingSlot === 'a') numAEl.textContent = state.currentAnswer;
+    else if (state.missingSlot === 'b') numBEl.textContent = state.currentAnswer;
+    else answerSlotEl.textContent = state.currentAnswer;
+  }
   state.round++;
 
   setTimeout(() => {
@@ -212,6 +347,7 @@ function pickEncouragement(correct) {
 // ----- Результат -----
 const resultTitle = document.getElementById('result-title');
 const resultText = document.getElementById('result-text');
+const unlockMessageEl = document.getElementById('unlock-message');
 
 function finishRound() {
   updateRocketPosition();
@@ -226,12 +362,21 @@ function finishRound() {
   resultTitle.textContent = title;
   resultText.textContent = `Правильних відповідей: ${score} з ${TOTAL_QUESTIONS}`;
 
+  unlockMessageEl.textContent = '';
+  if (currentProfile) {
+    const newLevel = maybeUnlockNextLevel(currentProfile, state.op, state.level, score);
+    if (newLevel) {
+      unlockMessageEl.textContent = `🎉 Рівень ${newLevel} відкрито!`;
+    }
+  }
+
   setTimeout(() => showScreen('result'), 500);
 }
 
 // ----- Старт нового раунду -----
-function startRound(op) {
+function startRound(op, level) {
   state.op = op;
+  state.level = level;
   state.round = 0;
   state.score = 0;
   rocketEl.style.left = '4%';
@@ -240,14 +385,54 @@ function startRound(op) {
   renderProblem();
 }
 
-// ----- Обробники подій -----
+// ----- Екран вибору рівня -----
+const levelListEl = document.getElementById('level-list');
+const levelOpTitleEl = document.getElementById('level-op-title');
+let currentLevelOp = 'add';
+
+function renderLevelScreen(op) {
+  currentLevelOp = op;
+  levelOpTitleEl.textContent = OP_CONFIG[op].label;
+  const unlocked = currentProfile ? getUnlockedLevel(currentProfile, op) : 1;
+
+  levelListEl.innerHTML = '';
+  [1, 2, 3].forEach(level => {
+    const meta = LEVEL_META[level];
+    const isLocked = level > unlocked;
+
+    const btn = document.createElement('button');
+    btn.className = 'level-card' + (isLocked ? ' locked' : '');
+    btn.innerHTML = `
+      <span class="level-icon">${meta.icon}</span>
+      <span class="level-text">
+        <span class="level-name">${meta.name}</span>
+        <span class="level-hint">${meta.hint}</span>
+      </span>
+      ${isLocked ? '<span class="level-lock">🔒</span>' : ''}
+    `;
+    btn.addEventListener('click', () => {
+      if (isLocked) {
+        showToast(`🔒 Пройди попередній рівень на 8/10, щоб відкрити`);
+      } else {
+        startRound(op, level);
+      }
+    });
+    levelListEl.appendChild(btn);
+  });
+}
+
 document.querySelectorAll('.mode-card').forEach(card => {
-  card.addEventListener('click', () => startRound(card.dataset.op));
+  card.addEventListener('click', () => {
+    renderLevelScreen(card.dataset.op);
+    showScreen('level');
+  });
 });
 
-document.getElementById('back-btn').addEventListener('click', () => showScreen('menu'));
+document.getElementById('level-back-btn').addEventListener('click', () => showScreen('menu'));
 
-document.getElementById('play-again-btn').addEventListener('click', () => startRound(state.op));
+document.getElementById('back-btn').addEventListener('click', () => showScreen('level'));
+
+document.getElementById('play-again-btn').addEventListener('click', () => startRound(state.op, state.level));
 
 // ----- Екран профілю: рендер і обробники -----
 document.getElementById('menu-btn').addEventListener('click', () => showScreen('menu'));
@@ -301,6 +486,7 @@ function renderProfileScreen() {
 }
 
 function enterApp(profile) {
+  currentProfile = profile;
   setActiveProfile(profile.id);
   profileAvatarBadgeEl.textContent = profile.avatar;
   greetingEl.textContent = `Привіт, ${profile.name}! Обери, що будемо вивчати`;

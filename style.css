@@ -323,6 +323,88 @@ body {
 .choice-btn.wrong-flash { background: var(--amber); color: var(--bg-space-2); }
 .choice-btn.disabled { pointer-events: none; opacity: 0.5; }
 
+/* --- Вибір рівня --- */
+#level-screen {
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding-top: 48px;
+}
+
+.level-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.level-card {
+  background: var(--card);
+  border: none;
+  border-radius: 20px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--white);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+  text-align: left;
+}
+.level-card:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.level-card.locked { opacity: 0.5; }
+
+.level-icon { font-size: 1.8rem; }
+.level-text { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.level-name { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.15rem; }
+.level-hint { font-size: 0.85rem; color: var(--text-dim); font-weight: 700; }
+.level-lock { font-size: 1.3rem; }
+
+/* --- Toast --- */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--card);
+  color: var(--white);
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 14px 20px;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 10;
+  max-width: 85%;
+  text-align: center;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* --- Текстові задачі --- */
+.word-view {
+  display: none;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+.problem-card.word-mode .equation-view { display: none; }
+.problem-card.word-mode .word-view { display: block; }
+.problem-card.word-mode { font-size: 1rem; padding: 22px 18px; }
+
+.unlock-message {
+  color: var(--mint);
+  font-weight: 800;
+  font-size: 1.05rem;
+  min-height: 1.4rem;
+}
 /* --- Результат --- */
 #result-screen {
   justify-content: center;

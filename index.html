@@ -59,6 +59,15 @@
     </div>
   </section>
 
+  <!-- Екран вибору рівня -->
+  <section id="level-screen" class="screen">
+    <button id="level-back-btn" class="back-btn" aria-label="Назад">←</button>
+    <h1 class="title small" id="level-op-title">Додавання</h1>
+    <p class="subtitle">Обери рівень</p>
+
+    <div class="level-list" id="level-list"></div>
+  </section>
+
   <!-- Екран гри -->
   <section id="game-screen" class="screen">
     <button id="back-btn" class="back-btn" aria-label="Назад">←</button>
@@ -73,12 +82,15 @@
       <span id="score-label">0 / 10</span>
     </div>
 
-    <div class="problem-card">
-      <span id="num-a">0</span>
-      <span id="op-sign">+</span>
-      <span id="num-b">0</span>
-      <span class="eq">=</span>
-      <span id="answer-slot">?</span>
+    <div class="problem-card" id="problem-card">
+      <div class="equation-view" id="equation-view">
+        <span id="num-a">0</span>
+        <span id="op-sign">+</span>
+        <span id="num-b">0</span>
+        <span class="eq">=</span>
+        <span id="answer-slot">?</span>
+      </div>
+      <p class="word-view" id="word-view"></p>
     </div>
 
     <div id="feedback" class="feedback"></div>
@@ -91,11 +103,14 @@
     <div class="result-rocket">🚀</div>
     <h2 id="result-title">Молодець!</h2>
     <p id="result-text">Ти відповів правильно 10 з 10 разів!</p>
+    <p id="unlock-message" class="unlock-message"></p>
     <button class="primary-btn" id="play-again-btn">Грати ще раз</button>
     <button class="secondary-btn" id="menu-btn">До меню</button>
   </section>
 
 </div>
+
+<div id="toast" class="toast"></div>
 
 <script src="game.js"></script>
 </body>
