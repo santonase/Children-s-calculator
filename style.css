@@ -326,6 +326,7 @@ body {
 
 /* --- Вибір рівня --- */
 #level-screen {
+  position: relative;
   justify-content: flex-start;
   align-items: center;
   text-align: center;
