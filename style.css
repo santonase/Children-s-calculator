@@ -154,6 +154,7 @@ body {
 }
 /* --- Меню --- */
 #menu-screen {
+  position: relative;
   justify-content: center;
   align-items: center;
   text-align: center;
@@ -361,6 +362,77 @@ body {
 .level-hint { font-size: 0.85rem; color: var(--text-dim); font-weight: 700; }
 .level-lock { font-size: 1.3rem; }
 
+/* --- Зірки та магазин --- */
+.star-balance {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--card);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--amber);
+}
+
+.shop-btn {
+  margin-top: 18px;
+  width: 100%;
+  background: var(--card);
+  border: none;
+  border-radius: 16px;
+  color: var(--white);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 16px 0;
+  box-shadow: 0 5px 0 rgba(0,0,0,0.25);
+}
+.shop-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+
+#shop-screen {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  padding-top: 48px;
+  gap: 4px;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  width: 100%;
+  margin-top: 18px;
+}
+
+.shop-item {
+  background: var(--card);
+  border: 3px solid transparent;
+  border-radius: 20px;
+  padding: 18px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--white);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+}
+.shop-item:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+.shop-item.active { border-color: var(--mint); }
+.shop-item.locked { opacity: 0.55; }
+
+.shop-item-icon { font-size: 2.4rem; }
+.shop-item-price { font-weight: 800; font-size: 0.95rem; color: var(--amber); }
+.shop-item-status { font-weight: 800; font-size: 0.85rem; color: var(--mint); }
+
+.stars-earned {
+  color: var(--amber);
+  font-weight: 800;
+  font-size: 1.05rem;
+  min-height: 1.4rem;
+}
 /* --- Toast --- */
 .toast {
   position: fixed;

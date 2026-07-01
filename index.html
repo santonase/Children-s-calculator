@@ -36,6 +36,7 @@
     <button id="switch-profile-btn" class="back-btn profile-badge" aria-label="Змінити профіль">
       <span id="profile-avatar-badge">🚀</span>
     </button>
+    <div class="star-balance" id="star-balance">⭐ 0</div>
     <h1 class="title">Дитячий<br>калькулятор</h1>
     <p class="subtitle" id="greeting">Обери, що будемо вивчати</p>
 
@@ -57,6 +58,17 @@
         <span class="mode-label">Ділення</span>
       </button>
     </div>
+
+    <button class="shop-btn" id="open-shop-btn">🛒 Магазин ракет</button>
+  </section>
+
+  <!-- Екран магазину -->
+  <section id="shop-screen" class="screen">
+    <button id="shop-back-btn" class="back-btn" aria-label="Назад">←</button>
+    <h1 class="title small">Магазин ракет</h1>
+    <div class="star-balance" id="shop-star-balance">⭐ 0</div>
+
+    <div class="shop-grid" id="shop-grid"></div>
   </section>
 
   <!-- Екран вибору рівня -->
@@ -103,6 +115,7 @@
     <div class="result-rocket">🚀</div>
     <h2 id="result-title">Молодець!</h2>
     <p id="result-text">Ти відповів правильно 10 з 10 разів!</p>
+    <p id="stars-earned" class="stars-earned"></p>
     <p id="unlock-message" class="unlock-message"></p>
     <button class="primary-btn" id="play-again-btn">Грати ще раз</button>
     <button class="secondary-btn" id="menu-btn">До меню</button>

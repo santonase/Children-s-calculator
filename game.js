@@ -20,6 +20,16 @@ const LEVEL_META = {
   3: { icon: '📖', name: 'Задачі', hint: 'Космічні історії' },
 };
 
+const SKINS = [
+  { id: 'rocket-classic', icon: '🚀', price: 0 },
+  { id: 'rocket-ufo', icon: '🛸', price: 5 },
+  { id: 'rocket-comet', icon: '☄️', price: 10 },
+  { id: 'rocket-moon', icon: '🌕', price: 20 },
+  { id: 'rocket-planet', icon: '🪐', price: 35 },
+  { id: 'rocket-star', icon: '🌟', price: 55 },
+  { id: 'rocket-galaxy', icon: '🌌', price: 80 },
+];
+
 const WORD_TEMPLATES = {
   add: [
     'У капітана було {a} зірок, він знайшов ще {b}. Скільки зірок у нього тепер?',
@@ -115,11 +125,51 @@ function createProfile(name, avatar) {
     name: name.trim() || 'Гравець',
     avatar,
     progress: { add: { unlockedLevel: 1 }, sub: { unlockedLevel: 1 }, mul: { unlockedLevel: 1 }, div: { unlockedLevel: 1 } },
+    stars: 0,
+    ownedSkins: ['rocket-classic'],
+    activeSkin: 'rocket-classic',
   };
   profiles.push(profile);
   saveProfiles(profiles);
   setActiveProfile(profile.id);
   return profile;
+}
+
+function getStars(profile) {
+  return profile.stars || 0;
+}
+
+function getOwnedSkins(profile) {
+  return profile.ownedSkins || ['rocket-classic'];
+}
+
+function getActiveSkinIcon(profile) {
+  const skinId = profile.activeSkin || 'rocket-classic';
+  const skin = SKINS.find(s => s.id === skinId);
+  return skin ? skin.icon : '🚀';
+}
+
+function awardStars(profile, amount) {
+  profile.stars = getStars(profile) + amount;
+  updateProfile(profile);
+}
+
+function buySkin(profile, skinId) {
+  const skin = SKINS.find(s => s.id === skinId);
+  if (!skin) return false;
+  const owned = getOwnedSkins(profile);
+  if (owned.includes(skinId)) {
+    profile.activeSkin = skinId;
+    updateProfile(profile);
+    return true;
+  }
+  if (getStars(profile) < skin.price) return false;
+
+  profile.stars = getStars(profile) - skin.price;
+  profile.ownedSkins = [...owned, skinId];
+  profile.activeSkin = skinId;
+  updateProfile(profile);
+  return true;
 }
 
 function getUnlockedLevel(profile, op) {
@@ -155,6 +205,7 @@ const screens = {
   level: document.getElementById('level-screen'),
   game: document.getElementById('game-screen'),
   result: document.getElementById('result-screen'),
+  shop: document.getElementById('shop-screen'),
 };
 
 // ----- Toast -----
@@ -247,6 +298,7 @@ const rocketEl = document.getElementById('rocket');
 const trackFillEl = document.getElementById('track-fill');
 const problemCardEl = document.getElementById('problem-card');
 const wordViewEl = document.getElementById('word-view');
+const starBalanceEl = document.getElementById('star-balance');
 
 function renderProblem() {
   const { a, b, answer } = generateProblem(state.op);
@@ -348,6 +400,7 @@ function pickEncouragement(correct) {
 const resultTitle = document.getElementById('result-title');
 const resultText = document.getElementById('result-text');
 const unlockMessageEl = document.getElementById('unlock-message');
+const starsEarnedEl = document.getElementById('stars-earned');
 
 function finishRound() {
   updateRocketPosition();
@@ -363,7 +416,14 @@ function finishRound() {
   resultText.textContent = `Правильних відповідей: ${score} з ${TOTAL_QUESTIONS}`;
 
   unlockMessageEl.textContent = '';
+  starsEarnedEl.textContent = '';
+
   if (currentProfile) {
+    const earned = score === TOTAL_QUESTIONS ? 3 : 1;
+    awardStars(currentProfile, earned);
+    starsEarnedEl.textContent = `+${earned} ⭐`;
+    updateStarBalance();
+
     const newLevel = maybeUnlockNextLevel(currentProfile, state.op, state.level, score);
     if (newLevel) {
       unlockMessageEl.textContent = `🎉 Рівень ${newLevel} відкрито!`;
@@ -379,6 +439,9 @@ function startRound(op, level) {
   state.level = level;
   state.round = 0;
   state.score = 0;
+  const skinIcon = currentProfile ? getActiveSkinIcon(currentProfile) : '🚀';
+  rocketEl.textContent = skinIcon;
+  document.querySelector('.result-rocket').textContent = skinIcon;
   rocketEl.style.left = '4%';
   trackFillEl.style.width = '4%';
   showScreen('game');
@@ -429,6 +492,51 @@ document.querySelectorAll('.mode-card').forEach(card => {
 });
 
 document.getElementById('level-back-btn').addEventListener('click', () => showScreen('menu'));
+
+// ----- Магазин скінів -----
+const shopGridEl = document.getElementById('shop-grid');
+const shopStarBalanceEl = document.getElementById('shop-star-balance');
+
+function renderShop() {
+  if (!currentProfile) return;
+  shopStarBalanceEl.textContent = `⭐ ${getStars(currentProfile)}`;
+  const owned = getOwnedSkins(currentProfile);
+  const active = currentProfile.activeSkin || 'rocket-classic';
+
+  shopGridEl.innerHTML = '';
+  SKINS.forEach(skin => {
+    const isOwned = owned.includes(skin.id);
+    const isActive = skin.id === active;
+    const canAfford = getStars(currentProfile) >= skin.price;
+
+    const btn = document.createElement('button');
+    btn.className = 'shop-item' + (isActive ? ' active' : '') + (!isOwned && !canAfford ? ' locked' : '');
+    btn.innerHTML = `
+      <span class="shop-item-icon">${skin.icon}</span>
+      ${isActive ? '<span class="shop-item-status">✓ Обрано</span>' :
+        isOwned ? '<span class="shop-item-status">Обрати</span>' :
+        `<span class="shop-item-price">⭐ ${skin.price}</span>`}
+    `;
+    btn.addEventListener('click', () => {
+      if (isActive) return;
+      if (!isOwned && !canAfford) {
+        showToast(`Потрібно ще ${skin.price - getStars(currentProfile)} ⭐`);
+        return;
+      }
+      buySkin(currentProfile, skin.id);
+      renderShop();
+      updateStarBalance();
+    });
+    shopGridEl.appendChild(btn);
+  });
+}
+
+document.getElementById('open-shop-btn').addEventListener('click', () => {
+  renderShop();
+  showScreen('shop');
+});
+
+document.getElementById('shop-back-btn').addEventListener('click', () => showScreen('menu'));
 
 document.getElementById('back-btn').addEventListener('click', () => showScreen('level'));
 
@@ -490,7 +598,13 @@ function enterApp(profile) {
   setActiveProfile(profile.id);
   profileAvatarBadgeEl.textContent = profile.avatar;
   greetingEl.textContent = `Привіт, ${profile.name}! Обери, що будемо вивчати`;
+  updateStarBalance();
   showScreen('menu');
+}
+
+function updateStarBalance() {
+  if (!currentProfile) return;
+  starBalanceEl.textContent = `⭐ ${getStars(currentProfile)}`;
 }
 
 createProfileBtn.addEventListener('click', () => {
