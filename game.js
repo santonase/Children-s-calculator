@@ -30,6 +30,16 @@ const SKINS = [
   { id: 'rocket-galaxy', icon: '🌌', price: 80 },
 ];
 
+const RANKS = [
+  { min: 0, name: 'Новачок' },
+  { min: 20, name: 'Космонавт' },
+  { min: 50, name: 'Капітан' },
+  { min: 100, name: 'Командир' },
+  { min: 200, name: 'Командир флоту' },
+];
+
+const LEADERBOARD_KEY = 'kidsCalc.leaderboard';
+
 const WORD_TEMPLATES = {
   add: [
     'У капітана було {a} зірок, він знайшов ще {b}. Скільки зірок у нього тепер?',
@@ -90,6 +100,7 @@ let state = {
   missingSlot: 'answer',
   currentA: null,
   currentB: null,
+  roundStartTime: 0,
 };
 
 let currentProfile = null;
@@ -126,6 +137,7 @@ function createProfile(name, avatar) {
     avatar,
     progress: { add: { unlockedLevel: 1 }, sub: { unlockedLevel: 1 }, mul: { unlockedLevel: 1 }, div: { unlockedLevel: 1 } },
     stars: 0,
+    totalStarsEarned: 0,
     ownedSkins: ['rocket-classic'],
     activeSkin: 'rocket-classic',
   };
@@ -151,7 +163,55 @@ function getActiveSkinIcon(profile) {
 
 function awardStars(profile, amount) {
   profile.stars = getStars(profile) + amount;
+  profile.totalStarsEarned = (profile.totalStarsEarned || getStars(profile)) + amount;
   updateProfile(profile);
+}
+
+function getRank(profile) {
+  const total = profile.totalStarsEarned || profile.stars || 0;
+  let rank = RANKS[0];
+  for (const r of RANKS) {
+    if (total >= r.min) rank = r;
+  }
+  return rank.name;
+}
+
+// ----- Лідери -----
+function loadLeaderboard() {
+  try {
+    const raw = localStorage.getItem(LEADERBOARD_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveLeaderboard(board) {
+  localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(board));
+}
+
+function submitScore(op, level, profile, points) {
+  const board = loadLeaderboard();
+  if (!board[op]) board[op] = {};
+  if (!board[op][level]) board[op][level] = [];
+
+  board[op][level].push({
+    profileId: profile.id,
+    name: profile.name,
+    avatar: profile.avatar,
+    points,
+    date: Date.now(),
+  });
+
+  board[op][level].sort((a, b) => b.points - a.points);
+  board[op][level] = board[op][level].slice(0, 5);
+
+  saveLeaderboard(board);
+}
+
+function getLeaders(op, level) {
+  const board = loadLeaderboard();
+  return (board[op] && board[op][level]) || [];
 }
 
 function buySkin(profile, skinId) {
@@ -206,6 +266,7 @@ const screens = {
   game: document.getElementById('game-screen'),
   result: document.getElementById('result-screen'),
   shop: document.getElementById('shop-screen'),
+  leaders: document.getElementById('leaders-screen'),
 };
 
 // ----- Toast -----
@@ -299,6 +360,7 @@ const trackFillEl = document.getElementById('track-fill');
 const problemCardEl = document.getElementById('problem-card');
 const wordViewEl = document.getElementById('word-view');
 const starBalanceEl = document.getElementById('star-balance');
+const rankLabelEl = document.getElementById('rank-label');
 
 function renderProblem() {
   const { a, b, answer } = generateProblem(state.op);
@@ -424,6 +486,10 @@ function finishRound() {
     starsEarnedEl.textContent = `+${earned} ⭐`;
     updateStarBalance();
 
+    const elapsedSeconds = Math.floor((Date.now() - state.roundStartTime) / 1000);
+    const points = Math.max(0, score * 10 - elapsedSeconds);
+    submitScore(state.op, state.level, currentProfile, points);
+
     const newLevel = maybeUnlockNextLevel(currentProfile, state.op, state.level, score);
     if (newLevel) {
       unlockMessageEl.textContent = `🎉 Рівень ${newLevel} відкрито!`;
@@ -439,6 +505,7 @@ function startRound(op, level) {
   state.level = level;
   state.round = 0;
   state.score = 0;
+  state.roundStartTime = Date.now();
   const skinIcon = currentProfile ? getActiveSkinIcon(currentProfile) : '🚀';
   rocketEl.textContent = skinIcon;
   document.querySelector('.result-rocket').textContent = skinIcon;
@@ -538,6 +605,74 @@ document.getElementById('open-shop-btn').addEventListener('click', () => {
 
 document.getElementById('shop-back-btn').addEventListener('click', () => showScreen('menu'));
 
+// ----- Екран лідерів -----
+const opTabsEl = document.getElementById('op-tabs');
+const levelTabsEl = document.getElementById('level-tabs');
+const leadersListEl = document.getElementById('leaders-list');
+let leaderOp = 'add';
+let leaderLevel = 1;
+
+function renderOpTabs() {
+  opTabsEl.innerHTML = '';
+  Object.keys(OP_CONFIG).forEach(op => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (op === leaderOp ? ' active' : '');
+    btn.textContent = OP_CONFIG[op].label;
+    btn.addEventListener('click', () => {
+      leaderOp = op;
+      renderOpTabs();
+      renderLeadersList();
+    });
+    opTabsEl.appendChild(btn);
+  });
+}
+
+function renderLevelTabs() {
+  levelTabsEl.innerHTML = '';
+  [1, 2, 3].forEach(level => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (level === leaderLevel ? ' active' : '');
+    btn.textContent = LEVEL_META[level].name;
+    btn.addEventListener('click', () => {
+      leaderLevel = level;
+      renderLevelTabs();
+      renderLeadersList();
+    });
+    levelTabsEl.appendChild(btn);
+  });
+}
+
+function renderLeadersList() {
+  const leaders = getLeaders(leaderOp, leaderLevel);
+  leadersListEl.innerHTML = '';
+
+  if (leaders.length === 0) {
+    leadersListEl.innerHTML = '<p class="leaders-empty">Ще ніхто не грав цей рівень. Будь першим!</p>';
+    return;
+  }
+
+  leaders.forEach((entry, i) => {
+    const row = document.createElement('div');
+    row.className = 'leader-row';
+    row.innerHTML = `
+      <span class="leader-rank">${i + 1}</span>
+      <span class="leader-avatar">${entry.avatar}</span>
+      <span class="leader-name">${entry.name}</span>
+      <span class="leader-points">${entry.points}</span>
+    `;
+    leadersListEl.appendChild(row);
+  });
+}
+
+document.getElementById('open-leaders-btn').addEventListener('click', () => {
+  renderOpTabs();
+  renderLevelTabs();
+  renderLeadersList();
+  showScreen('leaders');
+});
+
+document.getElementById('leaders-back-btn').addEventListener('click', () => showScreen('menu'));
+
 document.getElementById('back-btn').addEventListener('click', () => showScreen('level'));
 
 document.getElementById('play-again-btn').addEventListener('click', () => startRound(state.op, state.level));
@@ -598,6 +733,7 @@ function enterApp(profile) {
   setActiveProfile(profile.id);
   profileAvatarBadgeEl.textContent = profile.avatar;
   greetingEl.textContent = `Привіт, ${profile.name}! Обери, що будемо вивчати`;
+  rankLabelEl.textContent = `Ранг: ${getRank(profile)}`;
   updateStarBalance();
   showScreen('menu');
 }
@@ -605,6 +741,7 @@ function enterApp(profile) {
 function updateStarBalance() {
   if (!currentProfile) return;
   starBalanceEl.textContent = `⭐ ${getStars(currentProfile)}`;
+  rankLabelEl.textContent = `Ранг: ${getRank(currentProfile)}`;
 }
 
 createProfileBtn.addEventListener('click', () => {

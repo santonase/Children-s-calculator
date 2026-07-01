@@ -39,6 +39,7 @@
     <div class="star-balance" id="star-balance">⭐ 0</div>
     <h1 class="title">Дитячий<br>калькулятор</h1>
     <p class="subtitle" id="greeting">Обери, що будемо вивчати</p>
+    <p class="rank-label" id="rank-label">Новачок</p>
 
     <div class="menu-grid">
       <button class="mode-card" data-op="add">
@@ -59,7 +60,21 @@
       </button>
     </div>
 
-    <button class="shop-btn" id="open-shop-btn">🛒 Магазин ракет</button>
+    <div class="menu-footer-row">
+      <button class="shop-btn" id="open-shop-btn">🛒 Магазин</button>
+      <button class="shop-btn" id="open-leaders-btn">🏆 Лідери</button>
+    </div>
+  </section>
+
+  <!-- Екран лідерів -->
+  <section id="leaders-screen" class="screen">
+    <button id="leaders-back-btn" class="back-btn" aria-label="Назад">←</button>
+    <h1 class="title small">Лідери</h1>
+
+    <div class="op-tabs" id="op-tabs"></div>
+    <div class="level-tabs" id="level-tabs"></div>
+
+    <div class="leaders-list" id="leaders-list"></div>
   </section>
 
   <!-- Екран магазину -->
