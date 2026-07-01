@@ -1,6 +1,5 @@
 // ===== Дитячий калькулятор — логіка гри =====
 
-const TOTAL_QUESTIONS = 10;
 const RANGE = 10; // числа від 1 до 10 для першого рівня
 const STORAGE_KEY = 'kidsCalc.profiles';
 const ACTIVE_KEY = 'kidsCalc.activeProfileId';
@@ -41,6 +40,11 @@ const RANKS = [
 const LEADERBOARD_KEY = 'kidsCalc.leaderboard';
 
 const STREAK_BONUSES = { 3: 5, 7: 15, 30: 50 };
+
+// ----- Життя -----
+const MAX_LIVES = 5;
+const LIFE_REGEN_MS = 30 * 60 * 1000; // 30 хвилин на 1 життя
+const TASKS_PER_BLOCK = 10; // завдань у блоці
 
 // Відмінювання іменників за числівником: 1 / 2-4 / 5-10
 function threeWay(n, one, few, many) {
@@ -108,13 +112,12 @@ const WORD_TEMPLATES = {
 let state = {
   op: 'add',
   level: 1,
-  round: 0,
-  score: 0,
+  taskNum: 1,        // поточне завдання в блоці (1..10)
+  correctCount: 0,   // скільки завдань блоку пройдено правильно
+  blockMistakes: 0,  // помилок за поточний блок (для бонусу за ідеальне проходження)
   currentAnswer: null,
   missingSlot: 'answer',
-  currentA: null,
-  currentB: null,
-  roundStartTime: 0,
+  blockStartTime: 0,
 };
 
 let currentProfile = null;
@@ -157,6 +160,9 @@ function createProfile(name, avatar) {
     streak: 0,
     lastPlayedDate: null,
     claimedStreakBonuses: [],
+    lives: MAX_LIVES,
+    livesUpdatedAt: Date.now(),
+    blockProgress: {},
   };
   profiles.push(profile);
   saveProfiles(profiles);
@@ -229,6 +235,97 @@ function getStreak(profile) {
   return profile.streak || 0;
 }
 
+// ----- Життя -----
+// Перераховує життя з урахуванням часу, що минув (регенерація)
+function refreshLives(profile) {
+  if (typeof profile.lives !== 'number') profile.lives = MAX_LIVES;
+  if (!profile.livesUpdatedAt) profile.livesUpdatedAt = Date.now();
+
+  if (profile.lives >= MAX_LIVES) {
+    profile.livesUpdatedAt = Date.now();
+    return profile.lives;
+  }
+
+  const now = Date.now();
+  const elapsed = now - profile.livesUpdatedAt;
+  const regenerated = Math.floor(elapsed / LIFE_REGEN_MS);
+
+  if (regenerated > 0) {
+    profile.lives = Math.min(MAX_LIVES, profile.lives + regenerated);
+    // Переносимо "залишок" часу, щоб не втрачати прогрес до наступного життя
+    if (profile.lives >= MAX_LIVES) {
+      profile.livesUpdatedAt = now;
+    } else {
+      profile.livesUpdatedAt = profile.livesUpdatedAt + regenerated * LIFE_REGEN_MS;
+    }
+    updateProfile(profile);
+  }
+  return profile.lives;
+}
+
+function getLives(profile) {
+  return refreshLives(profile);
+}
+
+function loseLife(profile) {
+  refreshLives(profile);
+  if (profile.lives === MAX_LIVES) {
+    // якщо життя були повні — запускаємо таймер регенерації від цього моменту
+    profile.livesUpdatedAt = Date.now();
+  }
+  profile.lives = Math.max(0, profile.lives - 1);
+  updateProfile(profile);
+  return profile.lives;
+}
+
+function refillLives(profile) {
+  profile.lives = MAX_LIVES;
+  profile.livesUpdatedAt = Date.now();
+  updateProfile(profile);
+}
+
+// Час у мс до відновлення наступного життя (для показу в інфо-вікні)
+function msToNextLife(profile) {
+  if (getLives(profile) >= MAX_LIVES) return 0;
+  const elapsed = Date.now() - profile.livesUpdatedAt;
+  return Math.max(0, LIFE_REGEN_MS - elapsed);
+}
+
+// ----- Прогрес блоків -----
+// Ключ блоку: "add-1", "add-2", "add-3", "sub-1" ...
+function blockKey(op, level) {
+  return `${op}-${level}`;
+}
+
+function getBlockUnlockedTask(profile, op, level) {
+  if (!profile.blockProgress) profile.blockProgress = {};
+  const key = blockKey(op, level);
+  return (profile.blockProgress[key] && profile.blockProgress[key].unlockedTask) || 1;
+}
+
+function setBlockUnlockedTask(profile, op, level, taskNum) {
+  if (!profile.blockProgress) profile.blockProgress = {};
+  const key = blockKey(op, level);
+  if (!profile.blockProgress[key]) profile.blockProgress[key] = { unlockedTask: 1 };
+  if (taskNum > profile.blockProgress[key].unlockedTask) {
+    profile.blockProgress[key].unlockedTask = Math.min(TASKS_PER_BLOCK, taskNum);
+  }
+  updateProfile(profile);
+}
+
+function isBlockComplete(profile, op, level) {
+  return getBlockUnlockedTask(profile, op, level) >= TASKS_PER_BLOCK &&
+    (profile.blockProgress[blockKey(op, level)].completed === true);
+}
+
+function markBlockComplete(profile, op, level) {
+  if (!profile.blockProgress) profile.blockProgress = {};
+  const key = blockKey(op, level);
+  if (!profile.blockProgress[key]) profile.blockProgress[key] = { unlockedTask: TASKS_PER_BLOCK };
+  profile.blockProgress[key].completed = true;
+  updateProfile(profile);
+}
+
 // ----- Лідери -----
 function loadLeaderboard() {
   try {
@@ -298,12 +395,13 @@ function updateProfile(profile) {
   }
 }
 
-function maybeUnlockNextLevel(profile, op, playedLevel, score) {
+function maybeUnlockNextLevel(profile, op, playedLevel, correctCount) {
   if (!profile.progress) profile.progress = {};
   if (!profile.progress[op]) profile.progress[op] = { unlockedLevel: 1 };
 
   const unlocked = profile.progress[op].unlockedLevel;
-  if (playedLevel === unlocked && playedLevel < 3 && score >= 8) {
+  // Блок вважається пройденим, якщо всі завдання зроблено (correctCount === TASKS_PER_BLOCK)
+  if (playedLevel === unlocked && playedLevel < 3 && correctCount >= TASKS_PER_BLOCK) {
     profile.progress[op].unlockedLevel = playedLevel + 1;
     updateProfile(profile);
     return playedLevel + 1;
@@ -316,10 +414,12 @@ const screens = {
   profile: document.getElementById('profile-screen'),
   menu: document.getElementById('menu-screen'),
   level: document.getElementById('level-screen'),
+  block: document.getElementById('block-screen'),
   game: document.getElementById('game-screen'),
   result: document.getElementById('result-screen'),
   shop: document.getElementById('shop-screen'),
   leaders: document.getElementById('leaders-screen'),
+  nolives: document.getElementById('nolives-screen'),
 };
 
 // ----- Toast -----
@@ -458,11 +558,12 @@ function renderProblem() {
 }
 
 function updateScoreLabel() {
-  scoreLabelEl.textContent = `${state.round} / ${TOTAL_QUESTIONS}`;
+  scoreLabelEl.textContent = `Завдання ${state.taskNum} / ${TASKS_PER_BLOCK}`;
 }
 
 function updateRocketPosition() {
-  const pct = (state.round / TOTAL_QUESTIONS) * 92; // залишаємо запас справа
+  // Ракета показує позицію поточного завдання в блоці
+  const pct = ((state.taskNum - 1) / TASKS_PER_BLOCK) * 92;
   rocketEl.style.left = `calc(${pct}% + 4%)`;
   trackFillEl.style.width = `calc(${pct}% + 4%)`;
 }
@@ -473,36 +574,62 @@ function handleAnswer(choice, btn) {
 
   const isCorrect = choice === state.currentAnswer;
 
+  // Показуємо правильну відповідь у рівнянні
+  const revealAnswer = () => {
+    if (state.level !== 3) {
+      if (state.missingSlot === 'a') numAEl.textContent = state.currentAnswer;
+      else if (state.missingSlot === 'b') numBEl.textContent = state.currentAnswer;
+      else answerSlotEl.textContent = state.currentAnswer;
+    }
+  };
+
   if (isCorrect) {
     btn.classList.add('correct-flash');
     feedbackEl.textContent = pickEncouragement(true);
     feedbackEl.className = 'feedback correct';
-    state.score++;
+    revealAnswer();
+    state.correctCount++;
+
+    // Зберігаємо прогрес: відкриваємо наступне завдання
+    if (currentProfile) {
+      setBlockUnlockedTask(currentProfile, state.op, state.level, state.taskNum + 1);
+    }
+
+    setTimeout(() => {
+      if (state.taskNum >= TASKS_PER_BLOCK) {
+        finishBlock();
+      } else {
+        state.taskNum++;
+        renderProblem();
+      }
+    }, 900);
   } else {
+    // Помилка: -1 життя, повторюємо це саме завдання
     btn.classList.add('wrong-flash');
-    feedbackEl.textContent = pickEncouragement(false);
-    feedbackEl.className = 'feedback wrong';
     allBtns.forEach(b => {
       if (parseInt(b.textContent, 10) === state.currentAnswer) {
         b.classList.add('correct-flash');
       }
     });
-  }
 
-  if (state.level !== 3) {
-    if (state.missingSlot === 'a') numAEl.textContent = state.currentAnswer;
-    else if (state.missingSlot === 'b') numBEl.textContent = state.currentAnswer;
-    else answerSlotEl.textContent = state.currentAnswer;
-  }
-  state.round++;
-
-  setTimeout(() => {
-    if (state.round >= TOTAL_QUESTIONS) {
-      finishRound();
-    } else {
-      renderProblem();
+    let livesLeft = MAX_LIVES;
+    if (currentProfile) {
+      livesLeft = loseLife(currentProfile);
+      updateLivesBadges();
     }
-  }, 900);
+    state.blockMistakes++;
+
+    feedbackEl.textContent = `Спробуй ще! ${'❤️'.repeat(livesLeft) || 'Життя скінчились'}`;
+    feedbackEl.className = 'feedback wrong';
+
+    setTimeout(() => {
+      if (livesLeft <= 0) {
+        showNoLives();
+      } else {
+        renderProblem(); // те саме завдання, нова генерація
+      }
+    }, 1100);
+  }
 }
 
 function pickEncouragement(correct) {
@@ -519,31 +646,31 @@ const unlockMessageEl = document.getElementById('unlock-message');
 const starsEarnedEl = document.getElementById('stars-earned');
 const streakMessageEl = document.getElementById('streak-message');
 
-function finishRound() {
+function finishBlock() {
   updateRocketPosition();
-  const score = state.score;
+  const correct = state.correctCount;
 
-  let title;
-  if (score === TOTAL_QUESTIONS) title = 'Ти зірка космосу! 🌟';
-  else if (score >= TOTAL_QUESTIONS * 0.7) title = 'Чудовий результат!';
-  else if (score >= TOTAL_QUESTIONS * 0.4) title = 'Гарний старт!';
-  else title = 'Тренуємось далі!';
-
-  resultTitle.textContent = title;
-  resultText.textContent = `Правильних відповідей: ${score} з ${TOTAL_QUESTIONS}`;
+  resultTitle.textContent = 'Блок пройдено! 🌟';
+  resultText.textContent = `Ти впорався з усіма ${TASKS_PER_BLOCK} завданнями!`;
 
   unlockMessageEl.textContent = '';
   starsEarnedEl.textContent = '';
   streakMessageEl.textContent = '';
 
   if (currentProfile) {
-    const earned = score === TOTAL_QUESTIONS ? 3 : 1;
+    // Зірки: +3 якщо блок пройдено без помилок (correct === завдань, а помилок не було),
+    // інакше +1. Помилки не рахуємо тут напряму, але correctCount == 10 завжди (бо блок треба пройти).
+    // Тому орієнтуємось на життя: якщо жодного разу не помилявся протягом блоку — бонус.
+    const perfect = state.blockMistakes === 0;
+    const earned = perfect ? 3 : 1;
     awardStars(currentProfile, earned);
     starsEarnedEl.textContent = `+${earned} ⭐`;
 
-    const elapsedSeconds = Math.floor((Date.now() - state.roundStartTime) / 1000);
-    const points = Math.max(0, score * 10 - elapsedSeconds);
+    const elapsedSeconds = Math.floor((Date.now() - state.blockStartTime) / 1000);
+    const points = Math.max(0, correct * 10 - elapsedSeconds);
     submitScore(state.op, state.level, currentProfile, points);
+
+    markBlockComplete(currentProfile, state.op, state.level);
 
     const streakBonus = updateStreak(currentProfile);
     if (streakBonus) {
@@ -551,27 +678,35 @@ function finishRound() {
     }
     updateStarBalance();
 
-    const newLevel = maybeUnlockNextLevel(currentProfile, state.op, state.level, score);
+    const newLevel = maybeUnlockNextLevel(currentProfile, state.op, state.level, correct);
     if (newLevel) {
-      unlockMessageEl.textContent = `🎉 Рівень ${newLevel} відкрито!`;
+      unlockMessageEl.textContent = `🎉 Наступний блок відкрито!`;
     }
   }
 
   setTimeout(() => showScreen('result'), 500);
 }
 
-// ----- Старт нового раунду -----
-function startRound(op, level) {
+// ----- Старт блоку -----
+function startBlock(op, level, startTask) {
+  // Перевірка життів перед стартом
+  if (currentProfile && getLives(currentProfile) <= 0) {
+    showNoLives();
+    return;
+  }
+
   state.op = op;
   state.level = level;
-  state.round = 0;
-  state.score = 0;
-  state.roundStartTime = Date.now();
+  state.taskNum = startTask || 1;
+  state.correctCount = 0;
+  state.blockMistakes = 0;
+  state.blockStartTime = Date.now();
+
   const skinIcon = currentProfile ? getActiveSkinIcon(currentProfile) : '🚀';
   rocketEl.textContent = skinIcon;
   document.querySelector('.result-rocket').textContent = skinIcon;
-  rocketEl.style.left = '4%';
-  trackFillEl.style.width = '4%';
+
+  updateLivesBadges();
   showScreen('game');
   renderProblem();
 }
@@ -603,13 +738,70 @@ function renderLevelScreen(op) {
     `;
     btn.addEventListener('click', () => {
       if (isLocked) {
-        showToast(`🔒 Пройди попередній рівень на 8/10, щоб відкрити`);
+        showToast(`🔒 Пройди попередній блок повністю, щоб відкрити`);
       } else {
-        startRound(op, level);
+        openBlock(op, level);
       }
     });
     levelListEl.appendChild(btn);
   });
+}
+
+// ----- Карта блоку -----
+const blockMapEl = document.getElementById('block-map');
+const blockTitleEl = document.getElementById('block-title');
+const blockSubtitleEl = document.getElementById('block-subtitle');
+let currentBlockOp = 'add';
+let currentBlockLevel = 1;
+
+function openBlock(op, level) {
+  currentBlockOp = op;
+  currentBlockLevel = level;
+  blockTitleEl.textContent = LEVEL_META[level].name;
+  blockSubtitleEl.textContent = OP_CONFIG[op].label;
+  updateLivesBadges();
+  renderBlockMap();
+  showScreen('block');
+}
+
+function renderBlockMap() {
+  const unlockedTask = currentProfile
+    ? getBlockUnlockedTask(currentProfile, currentBlockOp, currentBlockLevel)
+    : 1;
+
+  blockMapEl.innerHTML = '';
+  for (let task = 1; task <= TASKS_PER_BLOCK; task++) {
+    if (task > 1) {
+      const connector = document.createElement('div');
+      connector.className = 'station-connector' + (task <= unlockedTask ? ' done' : '');
+      blockMapEl.appendChild(connector);
+    }
+
+    const station = document.createElement('div');
+    station.className = 'map-station';
+
+    const dot = document.createElement('button');
+    const isDone = task < unlockedTask;
+    const isCurrent = task === unlockedTask;
+    const isLocked = task > unlockedTask;
+
+    dot.className = 'station-dot' +
+      (isDone ? ' done' : '') +
+      (isCurrent ? ' current' : '') +
+      (isLocked ? ' locked' : '');
+    dot.textContent = isDone ? '✓' : task;
+
+    dot.addEventListener('click', () => {
+      if (isLocked) {
+        showToast('🔒 Спочатку пройди попередні завдання');
+        return;
+      }
+      startBlock(currentBlockOp, currentBlockLevel, task);
+    });
+
+    station.appendChild(dot);
+    blockMapEl.appendChild(station);
+  }
 }
 
 document.querySelectorAll('.mode-card').forEach(card => {
@@ -620,6 +812,10 @@ document.querySelectorAll('.mode-card').forEach(card => {
 });
 
 document.getElementById('level-back-btn').addEventListener('click', () => showScreen('menu'));
+document.getElementById('block-back-btn').addEventListener('click', () => {
+  renderLevelScreen(currentBlockOp);
+  showScreen('level');
+});
 
 // ----- Магазин скінів -----
 const shopGridEl = document.getElementById('shop-grid');
@@ -734,9 +930,87 @@ document.getElementById('open-leaders-btn').addEventListener('click', () => {
 
 document.getElementById('leaders-back-btn').addEventListener('click', () => showScreen('menu'));
 
-document.getElementById('back-btn').addEventListener('click', () => showScreen('level'));
+// Кнопка "назад" у грі повертає на карту блоку
+document.getElementById('back-btn').addEventListener('click', () => {
+  renderBlockMap();
+  showScreen('block');
+});
 
-document.getElementById('play-again-btn').addEventListener('click', () => startRound(state.op, state.level));
+// "Грати ще раз" на екрані результату - повертає на карту блоку
+document.getElementById('play-again-btn').addEventListener('click', () => {
+  renderBlockMap();
+  showScreen('block');
+});
+
+// ----- Життя: бейджі, модалка, екран "без життів" -----
+const menuLivesBadge = document.getElementById('lives-badge');
+const gameLivesBadge = document.getElementById('game-lives-badge');
+const blockLivesBadge = document.getElementById('block-lives-badge');
+const livesModal = document.getElementById('lives-modal');
+const livesModalTimer = document.getElementById('lives-modal-timer');
+const noLivesText = document.getElementById('nolives-text');
+
+function updateLivesBadges() {
+  if (!currentProfile) return;
+  const lives = getLives(currentProfile);
+  const text = `❤️ ${lives}`;
+  if (menuLivesBadge) menuLivesBadge.textContent = text;
+  if (gameLivesBadge) gameLivesBadge.textContent = text;
+  if (blockLivesBadge) blockLivesBadge.textContent = text;
+}
+
+function formatMs(ms) {
+  const totalMin = Math.ceil(ms / 60000);
+  if (totalMin >= 60) {
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return `${h} год ${m} хв`;
+  }
+  return `${totalMin} хв`;
+}
+
+function openLivesModal() {
+  if (!currentProfile) return;
+  const lives = getLives(currentProfile);
+  if (lives >= MAX_LIVES) {
+    livesModalTimer.textContent = 'Усі життя повні!';
+  } else {
+    livesModalTimer.textContent = `Наступне життя через ${formatMs(msToNextLife(currentProfile))}`;
+  }
+  livesModal.classList.add('show');
+}
+
+function closeLivesModal() {
+  livesModal.classList.remove('show');
+}
+
+[menuLivesBadge, gameLivesBadge, blockLivesBadge].forEach(badge => {
+  if (badge) badge.addEventListener('click', openLivesModal);
+});
+document.getElementById('lives-modal-close').addEventListener('click', closeLivesModal);
+livesModal.addEventListener('click', (e) => {
+  if (e.target === livesModal) closeLivesModal();
+});
+
+function showNoLives() {
+  if (currentProfile && getLives(currentProfile) < MAX_LIVES) {
+    noLivesText.textContent = `Наступне життя через ${formatMs(msToNextLife(currentProfile))}. Отримай ще прямо зараз!`;
+  }
+  showScreen('nolives');
+}
+
+// Тимчасово: кнопка реклами одразу дає +5 (місце під реальну рекламу)
+document.getElementById('watch-ad-btn').addEventListener('click', () => {
+  if (currentProfile) {
+    refillLives(currentProfile);
+    updateLivesBadges();
+  }
+  showToast('❤️ Життя відновлено!');
+  renderBlockMap();
+  showScreen('block');
+});
+
+document.getElementById('nolives-menu-btn').addEventListener('click', () => showScreen('menu'));
 
 // ----- Екран профілю: рендер і обробники -----
 document.getElementById('menu-btn').addEventListener('click', () => showScreen('menu'));
@@ -795,6 +1069,7 @@ function enterApp(profile) {
   profileAvatarBadgeEl.textContent = profile.avatar;
   greetingEl.textContent = `Привіт, ${profile.name}! Обери, що будемо вивчати`;
   updateStarBalance();
+  updateLivesBadges();
   showScreen('menu');
 }
 

@@ -527,6 +527,138 @@ body {
   font-weight: 700;
   margin-top: 24px;
 }
+/* --- Життя --- */
+.lives-badge {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  background: var(--card);
+  border: none;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--coral);
+}
+.lives-badge-top { top: 0; }
+
+/* --- Карта блоку --- */
+#block-screen {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  padding-top: 48px;
+  gap: 2px;
+}
+
+.block-map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin-top: 16px;
+  width: 100%;
+}
+
+.map-station {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+}
+
+.station-dot {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--white);
+  border: 3px solid transparent;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+}
+.station-dot.done { background: var(--mint); color: var(--bg-space-2); }
+.station-dot.current { border-color: var(--amber); }
+.station-dot.locked { opacity: 0.4; }
+
+.station-connector {
+  width: 3px;
+  height: 18px;
+  background: var(--text-dim);
+  opacity: 0.3;
+}
+.station-connector.done { background: var(--mint); opacity: 0.7; }
+
+/* --- Екран "Життя скінчились" --- */
+#nolives-screen {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+.nolives-icon { font-size: 4rem; }
+.ad-placeholder {
+  width: 100%;
+  background: var(--card);
+  border: 2px dashed var(--text-dim);
+  border-radius: 16px;
+  padding: 40px 0;
+  color: var(--text-dim);
+  font-weight: 700;
+  margin: 8px 0;
+}
+
+/* --- Модальне вікно --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  padding: 24px;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: var(--bg-space-2);
+  border-radius: 24px;
+  padding: 28px 22px;
+  max-width: 340px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.modal-icon { font-size: 2.6rem; }
+.modal-title {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--coral);
+}
+.modal-text {
+  color: var(--text-dim);
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.modal-timer {
+  color: var(--amber);
+  font-weight: 800;
+  font-size: 0.95rem;
+  min-height: 1.2rem;
+}
+.modal-box .primary-btn { margin-top: 4px; }
+
 /* --- Toast --- */
 .toast {
   position: fixed;

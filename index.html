@@ -48,6 +48,7 @@
       <span id="profile-avatar-badge">🚀</span>
     </button>
     <div class="star-balance" id="star-balance">⭐ 0</div>
+    <button class="lives-badge" id="lives-badge">❤️ 5</button>
     <h1 class="title">Дитячий<br>калькулятор</h1>
     <p class="subtitle" id="greeting">Обери, що будемо вивчати</p>
     <div class="status-row">
@@ -109,9 +110,20 @@
     <div class="level-list" id="level-list"></div>
   </section>
 
+  <!-- Екран карти блоку (доріжка завдань) -->
+  <section id="block-screen" class="screen">
+    <button id="block-back-btn" class="back-btn" aria-label="Назад">←</button>
+    <button class="lives-badge lives-badge-top" id="block-lives-badge">❤️ 5</button>
+    <h1 class="title small" id="block-title">Таблиця</h1>
+    <p class="subtitle" id="block-subtitle">Додавання</p>
+
+    <div class="block-map" id="block-map"></div>
+  </section>
+
   <!-- Екран гри -->
   <section id="game-screen" class="screen">
     <button id="back-btn" class="back-btn" aria-label="Назад">←</button>
+    <button class="lives-badge lives-badge-top" id="game-lives-badge">❤️ 5</button>
 
     <div class="rocket-track">
       <div class="track-line"></div>
@@ -120,7 +132,7 @@
     </div>
 
     <div class="score-row">
-      <span id="score-label">0 / 10</span>
+      <span id="score-label">Завдання 1 / 10</span>
     </div>
 
     <div class="problem-card" id="problem-card">
@@ -151,9 +163,30 @@
     <button class="secondary-btn" id="menu-btn">До меню</button>
   </section>
 
+  <!-- Екран "Життя скінчились" -->
+  <section id="nolives-screen" class="screen">
+    <div class="nolives-icon">💔</div>
+    <h2 class="title small">Життя скінчились</h2>
+    <p class="subtitle" id="nolives-text">Зачекай, поки відновляться, або отримай ще!</p>
+    <div class="ad-placeholder">📺 Місце для реклами</div>
+    <button class="primary-btn" id="watch-ad-btn">Отримати +5 ❤️</button>
+    <button class="secondary-btn" id="nolives-menu-btn">До меню</button>
+  </section>
+
 </div>
 
 <div id="toast" class="toast"></div>
+
+<!-- Модальне інфо-вікно про життя -->
+<div id="lives-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-icon">❤️</div>
+    <h3 class="modal-title">Життя</h3>
+    <p class="modal-text">Кожна помилка забирає 1 життя. Одне життя відновлюється кожні 30 хвилин. Коли життя закінчуються — подивись рекламу, щоб отримати ще 5.</p>
+    <p class="modal-timer" id="lives-modal-timer"></p>
+    <button class="primary-btn" id="lives-modal-close">Зрозуміло</button>
+  </div>
+</div>
 
 <script src="game.js"></script>
 <script>
