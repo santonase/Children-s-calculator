@@ -13,6 +13,45 @@ const OP_CONFIG = {
   div: { sign: '÷', label: 'Ділення' },
 };
 
+// ----- Вікові рівні складності -----
+const AGE_TIERS = {
+  1: {
+    name: 'Космонавт',
+    ageHint: '5-6 років',
+    icon: '🚀',
+    ranges: {
+      add: { maxSum: 10, maxTerm: 10, carry: false },
+      sub: { maxTerm: 10 },
+      mul: { maxFactor: 5 },
+      div: { maxFactor: 5 },
+    },
+  },
+  2: {
+    name: 'Пілот',
+    ageHint: '7-8 років',
+    icon: '🛰️',
+    ranges: {
+      add: { maxSum: 20, maxTerm: 20, carry: true },
+      sub: { maxTerm: 20 },
+      mul: { maxFactor: 10 },
+      div: { maxFactor: 10 },
+    },
+  },
+  3: {
+    name: 'Капітан',
+    ageHint: '9-10 років',
+    icon: '🪐',
+    ranges: {
+      add: { maxSum: 100, maxTerm: 100, carry: true },
+      sub: { maxTerm: 100 },
+      mul: { maxFactor: 10, maxProduct: 100 },
+      div: { maxFactor: 10, maxProduct: 100 },
+    },
+  },
+};
+
+const TRACKS_PER_TIER = 10; // 10 доріжок = 100 завдань на тип
+
 const LEVEL_META = {
   1: { icon: '🔢', name: 'Таблиця', hint: 'Прості приклади' },
   2: { icon: '❓', name: 'Пропущене число', hint: 'Знайди невідоме' },
@@ -111,10 +150,12 @@ const WORD_TEMPLATES = {
 
 let state = {
   op: 'add',
-  level: 1,
-  taskNum: 1,        // поточне завдання в блоці (1..10)
-  correctCount: 0,   // скільки завдань блоку пройдено правильно
-  blockMistakes: 0,  // помилок за поточний блок (для бонусу за ідеальне проходження)
+  tier: 1,           // віковий рівень (1=Космонавт, 2=Пілот, 3=Капітан)
+  level: 1,          // тип завдання (1=Таблиця, 2=Пропущене, 3=Задачі)
+  track: 1,          // номер доріжки (1..10, далі нескінченно)
+  taskNum: 1,        // поточне завдання в доріжці (1..10)
+  correctCount: 0,   // скільки завдань доріжки пройдено правильно
+  blockMistakes: 0,  // помилок за поточну доріжку (для бонусу за ідеальне проходження)
   currentAnswer: null,
   missingSlot: 'answer',
   blockStartTime: 0,
@@ -152,7 +193,7 @@ function createProfile(name, avatar) {
     id: 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     name: name.trim() || 'Гравець',
     avatar,
-    progress: { add: { unlockedLevel: 1 }, sub: { unlockedLevel: 1 }, mul: { unlockedLevel: 1 }, div: { unlockedLevel: 1 } },
+    typeProgress: {}, // ключ "op-tier" -> { unlockedLevel }
     stars: 0,
     totalStarsEarned: 0,
     ownedSkins: ['rocket-classic'],
@@ -162,7 +203,7 @@ function createProfile(name, avatar) {
     claimedStreakBonuses: [],
     lives: MAX_LIVES,
     livesUpdatedAt: Date.now(),
-    blockProgress: {},
+    blockProgress: {}, // ключ "op-tier-level" -> { unlockedTrack, unlockedTask, completed }
   };
   profiles.push(profile);
   saveProfiles(profiles);
@@ -292,36 +333,56 @@ function msToNextLife(profile) {
 }
 
 // ----- Прогрес блоків -----
-// Ключ блоку: "add-1", "add-2", "add-3", "sub-1" ...
-function blockKey(op, level) {
-  return `${op}-${level}`;
+// Ключ блоку: "add-1-1" = операція-вік-тип (напр. додавання, Космонавт, Таблиця)
+function blockKey(op, tier, level) {
+  return `${op}-${tier}-${level}`;
 }
 
-function getBlockUnlockedTask(profile, op, level) {
+// Скільки доріжок відкрито (мінімум 1). Кожна доріжка = 10 завдань.
+function getUnlockedTrack(profile, op, tier, level) {
   if (!profile.blockProgress) profile.blockProgress = {};
-  const key = blockKey(op, level);
+  const key = blockKey(op, tier, level);
+  return (profile.blockProgress[key] && profile.blockProgress[key].unlockedTrack) || 1;
+}
+
+// Скільки завдань відкрито всередині поточної доріжки (1..10)
+function getUnlockedTask(profile, op, tier, level) {
+  if (!profile.blockProgress) profile.blockProgress = {};
+  const key = blockKey(op, tier, level);
   return (profile.blockProgress[key] && profile.blockProgress[key].unlockedTask) || 1;
 }
 
-function setBlockUnlockedTask(profile, op, level, taskNum) {
+function setUnlockedTask(profile, op, tier, level, taskNum) {
   if (!profile.blockProgress) profile.blockProgress = {};
-  const key = blockKey(op, level);
-  if (!profile.blockProgress[key]) profile.blockProgress[key] = { unlockedTask: 1 };
+  const key = blockKey(op, tier, level);
+  if (!profile.blockProgress[key]) profile.blockProgress[key] = { unlockedTrack: 1, unlockedTask: 1 };
   if (taskNum > profile.blockProgress[key].unlockedTask) {
     profile.blockProgress[key].unlockedTask = Math.min(TASKS_PER_BLOCK, taskNum);
   }
   updateProfile(profile);
 }
 
-function isBlockComplete(profile, op, level) {
-  return getBlockUnlockedTask(profile, op, level) >= TASKS_PER_BLOCK &&
-    (profile.blockProgress[blockKey(op, level)].completed === true);
+// Відкрити наступну доріжку (після проходження поточної)
+function unlockNextTrack(profile, op, tier, level) {
+  if (!profile.blockProgress) profile.blockProgress = {};
+  const key = blockKey(op, tier, level);
+  if (!profile.blockProgress[key]) profile.blockProgress[key] = { unlockedTrack: 1, unlockedTask: 1 };
+  profile.blockProgress[key].unlockedTrack += 1;
+  profile.blockProgress[key].unlockedTask = 1; // нова доріжка починається з завдання 1
+  updateProfile(profile);
 }
 
-function markBlockComplete(profile, op, level) {
+// Тип (Таблиця/Пропущене/Задачі) вважається "пройденим" якщо відкрито хоч 1 доріжку понад першу зі 100
+function isTypeComplete(profile, op, tier, level) {
+  if (!profile.blockProgress) return false;
+  const key = blockKey(op, tier, level);
+  return (profile.blockProgress[key] && profile.blockProgress[key].completed === true);
+}
+
+function markTypeComplete(profile, op, tier, level) {
   if (!profile.blockProgress) profile.blockProgress = {};
-  const key = blockKey(op, level);
-  if (!profile.blockProgress[key]) profile.blockProgress[key] = { unlockedTask: TASKS_PER_BLOCK };
+  const key = blockKey(op, tier, level);
+  if (!profile.blockProgress[key]) profile.blockProgress[key] = { unlockedTrack: 1, unlockedTask: TASKS_PER_BLOCK };
   profile.blockProgress[key].completed = true;
   updateProfile(profile);
 }
@@ -382,8 +443,9 @@ function buySkin(profile, skinId) {
   return true;
 }
 
-function getUnlockedLevel(profile, op) {
-  return (profile.progress && profile.progress[op] && profile.progress[op].unlockedLevel) || 1;
+function getUnlockedLevel(profile, op, tier) {
+  const key = `${op}-${tier}`;
+  return (profile.typeProgress && profile.typeProgress[key] && profile.typeProgress[key].unlockedLevel) || 1;
 }
 
 function updateProfile(profile) {
@@ -395,14 +457,15 @@ function updateProfile(profile) {
   }
 }
 
-function maybeUnlockNextLevel(profile, op, playedLevel, correctCount) {
-  if (!profile.progress) profile.progress = {};
-  if (!profile.progress[op]) profile.progress[op] = { unlockedLevel: 1 };
+function maybeUnlockNextLevel(profile, op, tier, playedLevel) {
+  if (!profile.typeProgress) profile.typeProgress = {};
+  const key = `${op}-${tier}`;
+  if (!profile.typeProgress[key]) profile.typeProgress[key] = { unlockedLevel: 1 };
 
-  const unlocked = profile.progress[op].unlockedLevel;
-  // Блок вважається пройденим, якщо всі завдання зроблено (correctCount === TASKS_PER_BLOCK)
-  if (playedLevel === unlocked && playedLevel < 3 && correctCount >= TASKS_PER_BLOCK) {
-    profile.progress[op].unlockedLevel = playedLevel + 1;
+  const unlocked = profile.typeProgress[key].unlockedLevel;
+  // Тип вважається пройденим, коли завершено першу доріжку (10 завдань)
+  if (playedLevel === unlocked && playedLevel < 3) {
+    profile.typeProgress[key].unlockedLevel = playedLevel + 1;
     updateProfile(profile);
     return playedLevel + 1;
   }
@@ -413,6 +476,7 @@ function maybeUnlockNextLevel(profile, op, playedLevel, correctCount) {
 const screens = {
   profile: document.getElementById('profile-screen'),
   menu: document.getElementById('menu-screen'),
+  age: document.getElementById('age-screen'),
   level: document.getElementById('level-screen'),
   block: document.getElementById('block-screen'),
   game: document.getElementById('game-screen'),
@@ -443,25 +507,42 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function generateProblem(op) {
+function generateProblem(op, tier) {
+  tier = tier || 1;
+  const r = AGE_TIERS[tier].ranges[op];
   let a, b, answer;
 
   if (op === 'add') {
-    a = randInt(1, RANGE);
-    b = randInt(1, RANGE);
-    answer = a + b;
+    // Генеруємо доданки так, щоб сума не перевищувала maxSum
+    for (let attempt = 0; attempt < 50; attempt++) {
+      a = randInt(1, r.maxTerm);
+      b = randInt(1, r.maxTerm);
+      answer = a + b;
+      if (answer > r.maxSum) continue;
+      // Для рівня без переходу через десяток: одиниці не мають давати перенос
+      if (!r.carry && (a % 10) + (b % 10) > 10) continue;
+      break;
+    }
   } else if (op === 'sub') {
-    a = randInt(1, RANGE);
-    b = randInt(1, a); // щоб результат був не менше 0
+    a = randInt(2, r.maxTerm);
+    b = randInt(1, a); // результат не менше 0
     answer = a - b;
   } else if (op === 'mul') {
-    a = randInt(1, RANGE);
-    b = randInt(1, RANGE);
-    answer = a * b;
+    for (let attempt = 0; attempt < 50; attempt++) {
+      a = randInt(1, r.maxFactor);
+      b = randInt(1, r.maxFactor);
+      answer = a * b;
+      if (r.maxProduct && answer > r.maxProduct) continue;
+      break;
+    }
   } else if (op === 'div') {
-    b = randInt(1, RANGE);
-    answer = randInt(1, RANGE);
-    a = b * answer; // ділиться без залишку
+    for (let attempt = 0; attempt < 50; attempt++) {
+      b = randInt(1, r.maxFactor);
+      answer = randInt(1, r.maxFactor);
+      a = b * answer; // ділиться без залишку
+      if (r.maxProduct && a > r.maxProduct) continue;
+      break;
+    }
   }
 
   return { a, b, answer };
@@ -517,7 +598,7 @@ const rankLabelEl = document.getElementById('rank-label');
 const streakLabelEl = document.getElementById('streak-label');
 
 function renderProblem() {
-  const { a, b, answer } = generateProblem(state.op);
+  const { a, b, answer } = generateProblem(state.op, state.tier);
   const sign = OP_CONFIG[state.op].sign;
 
   feedbackEl.textContent = '';
@@ -592,7 +673,7 @@ function handleAnswer(choice, btn) {
 
     // Зберігаємо прогрес: відкриваємо наступне завдання
     if (currentProfile) {
-      setBlockUnlockedTask(currentProfile, state.op, state.level, state.taskNum + 1);
+      setUnlockedTask(currentProfile, state.op, state.tier, state.level, state.taskNum + 1);
     }
 
     setTimeout(() => {
@@ -650,7 +731,7 @@ function finishBlock() {
   updateRocketPosition();
   const correct = state.correctCount;
 
-  resultTitle.textContent = 'Блок пройдено! 🌟';
+  resultTitle.textContent = 'Доріжку пройдено! 🌟';
   resultText.textContent = `Ти впорався з усіма ${TASKS_PER_BLOCK} завданнями!`;
 
   unlockMessageEl.textContent = '';
@@ -658,9 +739,6 @@ function finishBlock() {
   streakMessageEl.textContent = '';
 
   if (currentProfile) {
-    // Зірки: +3 якщо блок пройдено без помилок (correct === завдань, а помилок не було),
-    // інакше +1. Помилки не рахуємо тут напряму, але correctCount == 10 завжди (бо блок треба пройти).
-    // Тому орієнтуємось на життя: якщо жодного разу не помилявся протягом блоку — бонус.
     const perfect = state.blockMistakes === 0;
     const earned = perfect ? 3 : 1;
     awardStars(currentProfile, earned);
@@ -670,25 +748,33 @@ function finishBlock() {
     const points = Math.max(0, correct * 10 - elapsedSeconds);
     submitScore(state.op, state.level, currentProfile, points);
 
-    markBlockComplete(currentProfile, state.op, state.level);
+    // Відкриваємо наступну доріжку (якщо ще не відкрита)
+    const unlockedTrack = getUnlockedTrack(currentProfile, state.op, state.tier, state.level);
+    if (state.track >= unlockedTrack) {
+      unlockNextTrack(currentProfile, state.op, state.tier, state.level);
+    }
+
+    // Тип вважається "пройденим" після першої доріжки → відкриваємо наступний тип
+    if (state.track === 1) {
+      markTypeComplete(currentProfile, state.op, state.tier, state.level);
+      const newLevel = maybeUnlockNextLevel(currentProfile, state.op, state.tier, state.level);
+      if (newLevel) {
+        unlockMessageEl.textContent = `🎉 Наступний рівень відкрито!`;
+      }
+    }
 
     const streakBonus = updateStreak(currentProfile);
     if (streakBonus) {
       streakMessageEl.textContent = `🔥 ${streakBonus.days} днів підряд! +${streakBonus.stars} ⭐`;
     }
     updateStarBalance();
-
-    const newLevel = maybeUnlockNextLevel(currentProfile, state.op, state.level, correct);
-    if (newLevel) {
-      unlockMessageEl.textContent = `🎉 Наступний блок відкрито!`;
-    }
   }
 
   setTimeout(() => showScreen('result'), 500);
 }
 
-// ----- Старт блоку -----
-function startBlock(op, level, startTask) {
+// ----- Старт блоку (доріжки) -----
+function startBlock(op, tier, level, track, startTask) {
   // Перевірка життів перед стартом
   if (currentProfile && getLives(currentProfile) <= 0) {
     showNoLives();
@@ -696,7 +782,9 @@ function startBlock(op, level, startTask) {
   }
 
   state.op = op;
+  state.tier = tier;
   state.level = level;
+  state.track = track || 1;
   state.taskNum = startTask || 1;
   state.correctCount = 0;
   state.blockMistakes = 0;
@@ -711,15 +799,48 @@ function startBlock(op, level, startTask) {
   renderProblem();
 }
 
-// ----- Екран вибору рівня -----
+// ----- Екран вибору вікового рівня -----
+const ageListEl = document.getElementById('age-list');
+const ageOpTitleEl = document.getElementById('age-op-title');
+let currentOp = 'add';
+let currentTier = 1;
+
+function renderAgeScreen(op) {
+  currentOp = op;
+  ageOpTitleEl.textContent = OP_CONFIG[op].label;
+
+  ageListEl.innerHTML = '';
+  [1, 2, 3].forEach(tier => {
+    const meta = AGE_TIERS[tier];
+    const btn = document.createElement('button');
+    btn.className = 'level-card';
+    btn.innerHTML = `
+      <span class="level-icon">${meta.icon}</span>
+      <span class="level-text">
+        <span class="level-name">${meta.name}</span>
+        <span class="level-hint">${meta.ageHint}</span>
+      </span>
+    `;
+    btn.addEventListener('click', () => {
+      currentTier = tier;
+      renderLevelScreen(op, tier);
+      showScreen('level');
+    });
+    ageListEl.appendChild(btn);
+  });
+}
+
+// ----- Екран вибору типу завдань -----
 const levelListEl = document.getElementById('level-list');
 const levelOpTitleEl = document.getElementById('level-op-title');
-let currentLevelOp = 'add';
+const levelSubtitleEl = document.getElementById('level-subtitle');
 
-function renderLevelScreen(op) {
-  currentLevelOp = op;
+function renderLevelScreen(op, tier) {
+  currentOp = op;
+  currentTier = tier;
   levelOpTitleEl.textContent = OP_CONFIG[op].label;
-  const unlocked = currentProfile ? getUnlockedLevel(currentProfile, op) : 1;
+  levelSubtitleEl.textContent = `${AGE_TIERS[tier].name} · обери рівень`;
+  const unlocked = currentProfile ? getUnlockedLevel(currentProfile, op, tier) : 1;
 
   levelListEl.innerHTML = '';
   [1, 2, 3].forEach(level => {
@@ -738,36 +859,50 @@ function renderLevelScreen(op) {
     `;
     btn.addEventListener('click', () => {
       if (isLocked) {
-        showToast(`🔒 Пройди попередній блок повністю, щоб відкрити`);
+        showToast(`🔒 Пройди попередній рівень, щоб відкрити`);
       } else {
-        openBlock(op, level);
+        openBlock(op, tier, level);
       }
     });
     levelListEl.appendChild(btn);
   });
 }
 
-// ----- Карта блоку -----
+// ----- Карта блоку (доріжка) -----
 const blockMapEl = document.getElementById('block-map');
 const blockTitleEl = document.getElementById('block-title');
 const blockSubtitleEl = document.getElementById('block-subtitle');
-let currentBlockOp = 'add';
-let currentBlockLevel = 1;
+const trackIndicatorEl = document.getElementById('track-indicator');
+const nextTrackBtn = document.getElementById('next-track-btn');
 
-function openBlock(op, level) {
-  currentBlockOp = op;
+function openBlock(op, tier, level) {
+  currentOp = op;
+  currentTier = tier;
   currentBlockLevel = level;
+  state.op = op;
+  state.tier = tier;
+  state.level = level;
+  state.track = currentProfile ? getUnlockedTrack(currentProfile, op, tier, level) : 1;
   blockTitleEl.textContent = LEVEL_META[level].name;
-  blockSubtitleEl.textContent = OP_CONFIG[op].label;
+  blockSubtitleEl.textContent = `${OP_CONFIG[op].label} · ${AGE_TIERS[tier].name}`;
   updateLivesBadges();
   renderBlockMap();
   showScreen('block');
 }
 
+let currentBlockLevel = 1;
+
 function renderBlockMap() {
-  const unlockedTask = currentProfile
-    ? getBlockUnlockedTask(currentProfile, currentBlockOp, currentBlockLevel)
-    : 1;
+  const op = state.op, tier = state.tier, level = state.level;
+  const unlockedTrack = currentProfile ? getUnlockedTrack(currentProfile, op, tier, level) : 1;
+  const track = state.track;
+  const unlockedTask = (track < unlockedTrack)
+    ? TASKS_PER_BLOCK + 1  // доріжка вже повністю пройдена
+    : (currentProfile ? getUnlockedTask(currentProfile, op, tier, level) : 1);
+
+  // Індикатор доріжки та завдань
+  const totalTaskNum = (track - 1) * TASKS_PER_BLOCK;
+  trackIndicatorEl.textContent = `Доріжка ${track} з ${TRACKS_PER_TIER}  ·  завдань пройдено: ${totalTaskNum + Math.min(unlockedTask - 1, TASKS_PER_BLOCK)}/100`;
 
   blockMapEl.innerHTML = '';
   for (let task = 1; task <= TASKS_PER_BLOCK; task++) {
@@ -796,24 +931,49 @@ function renderBlockMap() {
         showToast('🔒 Спочатку пройди попередні завдання');
         return;
       }
-      startBlock(currentBlockOp, currentBlockLevel, task);
+      startBlock(op, tier, level, track, task);
     });
 
     station.appendChild(dot);
     blockMapEl.appendChild(station);
   }
+
+  // Кнопка "Далі" — показуємо, якщо поточну доріжку пройдено і можна перейти на наступну
+  const trackDone = unlockedTask > TASKS_PER_BLOCK;
+  if (trackDone && track < TRACKS_PER_TIER) {
+    nextTrackBtn.style.display = 'block';
+    nextTrackBtn.textContent = `Доріжка ${track + 1} ▶`;
+    nextTrackBtn.onclick = () => {
+      state.track = track + 1;
+      renderBlockMap();
+    };
+  } else if (trackDone && track >= TRACKS_PER_TIER) {
+    // Усі 100 завдань пройдено — генеруємо ще
+    nextTrackBtn.style.display = 'block';
+    nextTrackBtn.textContent = 'Ще завдання ▶';
+    nextTrackBtn.onclick = () => {
+      state.track = track + 1;
+      renderBlockMap();
+    };
+  } else {
+    nextTrackBtn.style.display = 'none';
+  }
 }
 
 document.querySelectorAll('.mode-card').forEach(card => {
   card.addEventListener('click', () => {
-    renderLevelScreen(card.dataset.op);
-    showScreen('level');
+    renderAgeScreen(card.dataset.op);
+    showScreen('age');
   });
 });
 
-document.getElementById('level-back-btn').addEventListener('click', () => showScreen('menu'));
+document.getElementById('age-back-btn').addEventListener('click', () => showScreen('menu'));
+document.getElementById('level-back-btn').addEventListener('click', () => {
+  renderAgeScreen(currentOp);
+  showScreen('age');
+});
 document.getElementById('block-back-btn').addEventListener('click', () => {
-  renderLevelScreen(currentBlockOp);
+  renderLevelScreen(currentOp, currentTier);
   showScreen('level');
 });
 

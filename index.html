@@ -101,11 +101,20 @@
     <div class="shop-grid" id="shop-grid"></div>
   </section>
 
-  <!-- Екран вибору рівня -->
+  <!-- Екран вибору вікового рівня -->
+  <section id="age-screen" class="screen">
+    <button id="age-back-btn" class="back-btn" aria-label="Назад">←</button>
+    <h1 class="title small" id="age-op-title">Додавання</h1>
+    <p class="subtitle">Обери свій рівень</p>
+
+    <div class="level-list" id="age-list"></div>
+  </section>
+
+  <!-- Екран вибору рівня (типу завдань) -->
   <section id="level-screen" class="screen">
     <button id="level-back-btn" class="back-btn" aria-label="Назад">←</button>
     <h1 class="title small" id="level-op-title">Додавання</h1>
-    <p class="subtitle">Обери рівень</p>
+    <p class="subtitle" id="level-subtitle">Обери рівень</p>
 
     <div class="level-list" id="level-list"></div>
   </section>
@@ -116,8 +125,11 @@
     <button class="lives-badge lives-badge-top" id="block-lives-badge">❤️ 5</button>
     <h1 class="title small" id="block-title">Таблиця</h1>
     <p class="subtitle" id="block-subtitle">Додавання</p>
+    <div class="track-indicator" id="track-indicator">Доріжка 1 з 10</div>
 
     <div class="block-map" id="block-map"></div>
+
+    <button class="shop-btn" id="next-track-btn" style="display:none;">Далі ▶</button>
   </section>
 
   <!-- Екран гри -->

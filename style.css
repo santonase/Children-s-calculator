@@ -325,6 +325,7 @@ body {
 .choice-btn.disabled { pointer-events: none; opacity: 0.5; }
 
 /* --- Вибір рівня --- */
+#age-screen,
 #level-screen {
   position: relative;
   justify-content: flex-start;
@@ -332,6 +333,19 @@ body {
   text-align: center;
   gap: 4px;
   padding-top: 48px;
+}
+
+.age-hint {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+.track-indicator {
+  color: var(--amber);
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin-top: 4px;
 }
 
 .level-list {
