@@ -68,6 +68,90 @@ body {
 }
 .screen.active { display: flex; }
 
+.title.small { font-size: 2rem; margin-bottom: 4px; }
+
+/* --- Профіль --- */
+#profile-screen {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+
+.profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.profile-item {
+  background: var(--card);
+  border: none;
+  border-radius: 18px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--white);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 5px 0 rgba(0,0,0,0.25);
+}
+.profile-item .avatar-emoji { font-size: 1.8rem; }
+.profile-item:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+
+.new-profile-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.avatar-option {
+  background: var(--card);
+  border: 3px solid transparent;
+  border-radius: 16px;
+  font-size: 1.8rem;
+  padding: 10px 0;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.avatar-option.selected {
+  border-color: var(--amber);
+  transform: scale(1.05);
+}
+
+.name-input {
+  width: 100%;
+  background: var(--card);
+  border: none;
+  border-radius: 16px;
+  padding: 16px;
+  color: var(--white);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-align: center;
+}
+.name-input::placeholder { color: var(--text-dim); }
+.name-input:focus { outline: 2px solid var(--amber); }
+
+.profile-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
 /* --- Меню --- */
 #menu-screen {
   justify-content: center;

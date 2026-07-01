@@ -15,10 +15,29 @@
 
 <div class="app">
 
+  <!-- Екран профілю: створення / вибір -->
+  <section id="profile-screen" class="screen active">
+    <h1 class="title small">Хто грає?</h1>
+
+    <div id="profile-list" class="profile-list"></div>
+
+    <div id="new-profile-form" class="new-profile-form">
+      <p class="subtitle">Обери свого космонавта</p>
+      <div class="avatar-grid" id="avatar-grid"></div>
+      <input type="text" id="name-input" class="name-input" placeholder="Твоє ім'я" maxlength="12">
+      <button class="primary-btn" id="create-profile-btn">Почати гру</button>
+    </div>
+
+    <button class="secondary-btn" id="add-profile-btn">+ Новий гравець</button>
+  </section>
+
   <!-- Екран вибору операції -->
-  <section id="menu-screen" class="screen active">
+  <section id="menu-screen" class="screen">
+    <button id="switch-profile-btn" class="back-btn profile-badge" aria-label="Змінити профіль">
+      <span id="profile-avatar-badge">🚀</span>
+    </button>
     <h1 class="title">Дитячий<br>калькулятор</h1>
-    <p class="subtitle">Обери, що будемо вивчати</p>
+    <p class="subtitle" id="greeting">Обери, що будемо вивчати</p>
 
     <div class="menu-grid">
       <button class="mode-card" data-op="add">

@@ -2,6 +2,10 @@
 
 const TOTAL_QUESTIONS = 10;
 const RANGE = 10; // числа від 1 до 10 для першого рівня
+const STORAGE_KEY = 'kidsCalc.profiles';
+const ACTIVE_KEY = 'kidsCalc.activeProfileId';
+
+const AVATARS = ['🚀', '👩‍🚀', '👨‍🚀', '🐱', '🐶', '🦄', '🐻', '🦊'];
 
 const OP_CONFIG = {
   add: { sign: '+', label: 'Додавання' },
@@ -17,8 +21,46 @@ let state = {
   currentAnswer: null,
 };
 
+// ----- Профілі: збереження/завантаження -----
+function loadProfiles() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveProfiles(profiles) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+}
+
+function getActiveProfile() {
+  const id = localStorage.getItem(ACTIVE_KEY);
+  if (!id) return null;
+  return loadProfiles().find(p => p.id === id) || null;
+}
+
+function setActiveProfile(id) {
+  localStorage.setItem(ACTIVE_KEY, id);
+}
+
+function createProfile(name, avatar) {
+  const profiles = loadProfiles();
+  const profile = {
+    id: 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name: name.trim() || 'Гравець',
+    avatar,
+  };
+  profiles.push(profile);
+  saveProfiles(profiles);
+  setActiveProfile(profile.id);
+  return profile;
+}
+
 // ----- Екрани -----
 const screens = {
+  profile: document.getElementById('profile-screen'),
   menu: document.getElementById('menu-screen'),
   game: document.getElementById('game-screen'),
   result: document.getElementById('result-screen'),
@@ -207,4 +249,94 @@ document.getElementById('back-btn').addEventListener('click', () => showScreen('
 
 document.getElementById('play-again-btn').addEventListener('click', () => startRound(state.op));
 
+// ----- Екран профілю: рендер і обробники -----
 document.getElementById('menu-btn').addEventListener('click', () => showScreen('menu'));
+
+const profileListEl = document.getElementById('profile-list');
+const avatarGridEl = document.getElementById('avatar-grid');
+const nameInputEl = document.getElementById('name-input');
+const createProfileBtn = document.getElementById('create-profile-btn');
+const addProfileBtn = document.getElementById('add-profile-btn');
+const newProfileFormEl = document.getElementById('new-profile-form');
+const profileAvatarBadgeEl = document.getElementById('profile-avatar-badge');
+const greetingEl = document.getElementById('greeting');
+
+let selectedAvatar = AVATARS[0];
+
+function renderAvatarGrid() {
+  avatarGridEl.innerHTML = '';
+  AVATARS.forEach(avatar => {
+    const btn = document.createElement('button');
+    btn.className = 'avatar-option';
+    btn.textContent = avatar;
+    if (avatar === selectedAvatar) btn.classList.add('selected');
+    btn.addEventListener('click', () => {
+      selectedAvatar = avatar;
+      [...avatarGridEl.children].forEach(c => c.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+    avatarGridEl.appendChild(btn);
+  });
+}
+
+function renderProfileScreen() {
+  const profiles = loadProfiles();
+  profileListEl.innerHTML = '';
+
+  if (profiles.length === 0) {
+    newProfileFormEl.style.display = 'flex';
+    addProfileBtn.style.display = 'none';
+  } else {
+    profiles.forEach(profile => {
+      const btn = document.createElement('button');
+      btn.className = 'profile-item';
+      btn.innerHTML = `<span class="avatar-emoji">${profile.avatar}</span><span>${profile.name}</span>`;
+      btn.addEventListener('click', () => enterApp(profile));
+      profileListEl.appendChild(btn);
+    });
+    newProfileFormEl.style.display = 'none';
+    addProfileBtn.style.display = 'block';
+  }
+  renderAvatarGrid();
+}
+
+function enterApp(profile) {
+  setActiveProfile(profile.id);
+  profileAvatarBadgeEl.textContent = profile.avatar;
+  greetingEl.textContent = `Привіт, ${profile.name}! Обери, що будемо вивчати`;
+  showScreen('menu');
+}
+
+createProfileBtn.addEventListener('click', () => {
+  const name = nameInputEl.value.trim();
+  if (!name) {
+    nameInputEl.focus();
+    return;
+  }
+  const profile = createProfile(name, selectedAvatar);
+  enterApp(profile);
+});
+
+addProfileBtn.addEventListener('click', () => {
+  newProfileFormEl.style.display = 'flex';
+  addProfileBtn.style.display = 'none';
+  nameInputEl.value = '';
+  selectedAvatar = AVATARS[0];
+  renderAvatarGrid();
+});
+
+document.getElementById('switch-profile-btn').addEventListener('click', () => {
+  renderProfileScreen();
+  showScreen('profile');
+});
+
+// ----- Старт застосунку -----
+(function initApp() {
+  const active = getActiveProfile();
+  if (active) {
+    enterApp(active);
+  } else {
+    renderProfileScreen();
+    showScreen('profile');
+  }
+})();
