@@ -433,11 +433,30 @@ body {
   font-size: 1.05rem;
   min-height: 1.4rem;
 }
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
 .rank-label {
   color: var(--amber);
   font-weight: 800;
   font-size: 0.95rem;
-  margin-bottom: 6px;
+}
+
+.streak-label {
+  color: var(--coral);
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.streak-message {
+  color: var(--coral);
+  font-weight: 800;
+  font-size: 1.05rem;
+  min-height: 1.4rem;
 }
 
 .menu-footer-row {

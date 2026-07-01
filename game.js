@@ -40,6 +40,8 @@ const RANKS = [
 
 const LEADERBOARD_KEY = 'kidsCalc.leaderboard';
 
+const STREAK_BONUSES = { 3: 5, 7: 15, 30: 50 };
+
 const WORD_TEMPLATES = {
   add: [
     'У капітана було {a} зірок, він знайшов ще {b}. Скільки зірок у нього тепер?',
@@ -140,6 +142,9 @@ function createProfile(name, avatar) {
     totalStarsEarned: 0,
     ownedSkins: ['rocket-classic'],
     activeSkin: 'rocket-classic',
+    streak: 0,
+    lastPlayedDate: null,
+    claimedStreakBonuses: [],
   };
   profiles.push(profile);
   saveProfiles(profiles);
@@ -174,6 +179,42 @@ function getRank(profile) {
     if (total >= r.min) rank = r;
   }
   return rank.name;
+}
+
+// ----- Стрик -----
+function dateKey(timestamp) {
+  const d = new Date(timestamp);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function updateStreak(profile) {
+  const today = dateKey(Date.now());
+  const lastKey = profile.lastPlayedDate;
+
+  if (lastKey === today) {
+    return null; // вже грав сьогодні, стрик не змінюється
+  }
+
+  const yesterday = dateKey(Date.now() - 24 * 60 * 60 * 1000);
+  profile.streak = lastKey === yesterday ? (profile.streak || 0) + 1 : 1;
+  profile.lastPlayedDate = today;
+
+  if (!profile.claimedStreakBonuses) profile.claimedStreakBonuses = [];
+
+  let bonusEarned = null;
+  const bonusStars = STREAK_BONUSES[profile.streak];
+  if (bonusStars && !profile.claimedStreakBonuses.includes(profile.streak)) {
+    profile.claimedStreakBonuses.push(profile.streak);
+    awardStars(profile, bonusStars);
+    bonusEarned = { days: profile.streak, stars: bonusStars };
+  }
+
+  updateProfile(profile);
+  return bonusEarned;
+}
+
+function getStreak(profile) {
+  return profile.streak || 0;
 }
 
 // ----- Лідери -----
@@ -361,6 +402,7 @@ const problemCardEl = document.getElementById('problem-card');
 const wordViewEl = document.getElementById('word-view');
 const starBalanceEl = document.getElementById('star-balance');
 const rankLabelEl = document.getElementById('rank-label');
+const streakLabelEl = document.getElementById('streak-label');
 
 function renderProblem() {
   const { a, b, answer } = generateProblem(state.op);
@@ -463,6 +505,7 @@ const resultTitle = document.getElementById('result-title');
 const resultText = document.getElementById('result-text');
 const unlockMessageEl = document.getElementById('unlock-message');
 const starsEarnedEl = document.getElementById('stars-earned');
+const streakMessageEl = document.getElementById('streak-message');
 
 function finishRound() {
   updateRocketPosition();
@@ -479,16 +522,22 @@ function finishRound() {
 
   unlockMessageEl.textContent = '';
   starsEarnedEl.textContent = '';
+  streakMessageEl.textContent = '';
 
   if (currentProfile) {
     const earned = score === TOTAL_QUESTIONS ? 3 : 1;
     awardStars(currentProfile, earned);
     starsEarnedEl.textContent = `+${earned} ⭐`;
-    updateStarBalance();
 
     const elapsedSeconds = Math.floor((Date.now() - state.roundStartTime) / 1000);
     const points = Math.max(0, score * 10 - elapsedSeconds);
     submitScore(state.op, state.level, currentProfile, points);
+
+    const streakBonus = updateStreak(currentProfile);
+    if (streakBonus) {
+      streakMessageEl.textContent = `🔥 ${streakBonus.days} днів підряд! +${streakBonus.stars} ⭐`;
+    }
+    updateStarBalance();
 
     const newLevel = maybeUnlockNextLevel(currentProfile, state.op, state.level, score);
     if (newLevel) {
@@ -733,7 +782,6 @@ function enterApp(profile) {
   setActiveProfile(profile.id);
   profileAvatarBadgeEl.textContent = profile.avatar;
   greetingEl.textContent = `Привіт, ${profile.name}! Обери, що будемо вивчати`;
-  rankLabelEl.textContent = `Ранг: ${getRank(profile)}`;
   updateStarBalance();
   showScreen('menu');
 }
@@ -742,6 +790,7 @@ function updateStarBalance() {
   if (!currentProfile) return;
   starBalanceEl.textContent = `⭐ ${getStars(currentProfile)}`;
   rankLabelEl.textContent = `Ранг: ${getRank(currentProfile)}`;
+  streakLabelEl.textContent = `🔥 ${getStreak(currentProfile)}`;
 }
 
 createProfileBtn.addEventListener('click', () => {
