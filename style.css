@@ -945,3 +945,70 @@ body {
   height: 42px;
   font-size: 1.1rem;
 }
+
+/* --- Для батьків --- */
+.parent-btn {
+  margin-top: 10px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--text-dim);
+  border-radius: 16px;
+  color: var(--text-dim);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 12px 0;
+}
+
+#stats-screen {
+  position: relative;
+  justify-content: flex-start;
+  align-items: stretch;
+  text-align: left;
+  padding-top: 48px;
+  gap: 8px;
+  overflow-y: auto;
+}
+.stats-content { width: 100%; display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+.stat-card {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 16px;
+}
+.stat-card h3 {
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 1rem;
+  color: var(--amber);
+  margin-bottom: 10px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--white);
+}
+.stat-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-space-2);
+  border-radius: 4px;
+  margin: 0 10px;
+  overflow: hidden;
+}
+.stat-bar-fill { height: 100%; border-radius: 4px; }
+.stat-week {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px;
+  height: 90px;
+  margin-top: 8px;
+}
+.stat-day { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.stat-day-bar { width: 100%; background: var(--mint); border-radius: 4px 4px 0 0; min-height: 3px; }
+.stat-day-label { font-size: 0.7rem; color: var(--text-dim); font-weight: 700; }
+.stat-big { font-size: 1.6rem; font-family: 'Baloo 2', sans-serif; color: var(--mint); font-weight: 700; }
+.stat-weak { color: var(--coral); }

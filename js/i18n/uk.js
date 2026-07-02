@@ -138,6 +138,23 @@ const UK_DICT = {
   speechOps: { add: 'плюс', sub: 'мінус', mul: 'помножити на', div: 'поділити на' },
   speechEquals: 'дорівнює',
   speechHowMuch: 'скільки',
+  // Батьківська статистика
+  parentBtn: '👨‍👩‍👧 Для батьків',
+  statsTitle: 'Для батьків',
+  gateTitle: 'Для дорослих',
+  gateQuestion: (a, b) => `Скільки буде ${a} × ${b}?`,
+  gateNext: 'Далі',
+  gateCancel: 'Скасувати',
+  gateWrong: 'Спробуй ще раз',
+  statActivityTitle: 'Активність за тиждень',
+  statAccuracyTitle: 'Точність за темами',
+  statSummaryTitle: 'Загалом',
+  statTotalTime: 'Час занять',
+  statTotalTasks: 'Усього завдань',
+  statWeakest: 'Варто підтягнути',
+  statNoData: 'Ще немає даних. Пограйте, щоб побачити статистику.',
+  statHours: (h, m) => h > 0 ? `${h} год ${m} хв` : `${m} хв`,
+  gateClose: 'Зрозуміло',
 };
 
 registerLocale('uk', UK_DICT, UK_TEMPLATES);

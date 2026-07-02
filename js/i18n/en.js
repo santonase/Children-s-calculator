@@ -123,6 +123,22 @@ const EN_DICT = {
   speechOps: { add: 'plus', sub: 'minus', mul: 'times', div: 'divided by' },
   speechEquals: 'equals',
   speechHowMuch: 'what',
+  parentBtn: '👨‍👩‍👧 For parents',
+  statsTitle: 'For parents',
+  gateTitle: 'For adults',
+  gateQuestion: (a, b) => `What is ${a} × ${b}?`,
+  gateNext: 'Next',
+  gateCancel: 'Cancel',
+  gateWrong: 'Try again',
+  statActivityTitle: 'Weekly activity',
+  statAccuracyTitle: 'Accuracy by topic',
+  statSummaryTitle: 'Summary',
+  statTotalTime: 'Practice time',
+  statTotalTasks: 'Total tasks',
+  statWeakest: 'Needs practice',
+  statNoData: 'No data yet. Play to see statistics.',
+  statHours: (h, m) => h > 0 ? `${h}h ${m}m` : `${m}m`,
+  gateClose: 'Got it',
 };
 
 registerLocale('en', EN_DICT, EN_TEMPLATES);

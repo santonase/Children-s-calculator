@@ -14,7 +14,7 @@ const KVStore = {
 };
 
 // ----- Версія схеми профілю та міграції -----
-const PROFILE_SCHEMA_VERSION = 5;
+const PROFILE_SCHEMA_VERSION = 6;
 
 function migrateProfile(p) {
   if (!p) return p;
@@ -46,6 +46,10 @@ function migrateProfile(p) {
     if (p.tracksToChest === undefined) p.tracksToChest = 0;
     if (p.perfectTracks === undefined) p.perfectTracks = 0;
     if (!p.dailyGoal) p.dailyGoal = null;
+  }
+  // v5 -> v6: батьківська статистика
+  if (v < 6) {
+    if (!p.stats) p.stats = { byOp: {}, byDay: {}, totalSeconds: 0, totalTasks: 0 };
   }
   p.schemaVersion = PROFILE_SCHEMA_VERSION;
   return p;
@@ -97,6 +101,7 @@ function createProfile(name, avatar) {
     tracksToChest: 0,
     perfectTracks: 0,
     dailyGoal: null,
+    stats: { byOp: {}, byDay: {}, totalSeconds: 0, totalTasks: 0 },
     schemaVersion: PROFILE_SCHEMA_VERSION,
   };
   profiles.push(profile);

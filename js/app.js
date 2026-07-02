@@ -30,6 +30,7 @@ const screens = {
   shop: document.getElementById('shop-screen'),
   leaders: document.getElementById('leaders-screen'),
   badges: document.getElementById('badges-screen'),
+  stats: document.getElementById('stats-screen'),
   nolives: document.getElementById('nolives-screen'),
 };
 
@@ -152,6 +153,11 @@ function handleAnswer(choice, btn) {
 
   const isCorrect = choice === state.currentAnswer;
 
+  // Статистика: реєструємо відповідь по операції
+  if (currentProfile) {
+    statRegisterAnswer(currentProfile, state.op, isCorrect);
+  }
+
   // Показуємо правильну відповідь у рівнянні
   const revealAnswer = () => {
     if (state.level !== 3) {
@@ -258,6 +264,7 @@ function finishBlock() {
     const elapsedSeconds = Math.floor((Date.now() - state.blockStartTime) / 1000);
     const points = Math.max(0, correct * 10 - elapsedSeconds);
     submitScore(state.op, state.level, currentProfile, points);
+    statRegisterTrack(currentProfile, elapsedSeconds, TASKS_PER_BLOCK);
 
     // Відкриваємо наступну доріжку (якщо ще не відкрита)
     const unlockedTrack = getUnlockedTrack(currentProfile, state.op, state.grade, state.level);
@@ -614,6 +621,107 @@ document.getElementById('open-badges-btn').addEventListener('click', () => {
 });
 
 document.getElementById('badges-back-btn').addEventListener('click', () => showScreen('menu'));
+
+// ----- Батьківський замок -----
+const parentGateModal = document.getElementById('parent-gate-modal');
+const gateQuestionEl = document.getElementById('gate-question');
+const gateInputEl = document.getElementById('gate-input');
+let gateAnswer = 0;
+let gateOnSuccess = null;
+
+function openParentGate(onSuccess) {
+  const a = randInt(3, 9);
+  const b = randInt(3, 9);
+  gateAnswer = a * b;
+  gateOnSuccess = onSuccess;
+  gateQuestionEl.textContent = T.gateQuestion(a, b);
+  gateInputEl.value = '';
+  document.getElementById('gate-title').textContent = T.gateTitle;
+  document.getElementById('gate-submit').textContent = T.gateNext;
+  document.getElementById('gate-cancel').textContent = T.gateCancel;
+  parentGateModal.classList.add('show');
+  setTimeout(() => gateInputEl.focus(), 100);
+}
+
+document.getElementById('gate-submit').addEventListener('click', () => {
+  if (parseInt(gateInputEl.value, 10) === gateAnswer) {
+    parentGateModal.classList.remove('show');
+    if (gateOnSuccess) gateOnSuccess();
+  } else {
+    showToast(T.gateWrong);
+    gateInputEl.value = '';
+  }
+});
+
+document.getElementById('gate-cancel').addEventListener('click', () => {
+  parentGateModal.classList.remove('show');
+});
+
+// ----- Екран батьківської статистики -----
+const statsContentEl = document.getElementById('stats-content');
+
+function renderStats() {
+  if (!currentProfile) return;
+  document.getElementById('stats-title').textContent = T.statsTitle;
+
+  const stats = ensureStats(currentProfile);
+  if (stats.totalTasks === 0) {
+    statsContentEl.innerHTML = `<div class="stat-card"><p class="stat-row">${T.statNoData}</p></div>`;
+    return;
+  }
+
+  const time = statTotalTime(currentProfile);
+  const week = statLast7Days(currentProfile);
+  const maxTasks = Math.max(1, ...week.map(d => d.tasks));
+  const weak = statWeakestOp(currentProfile);
+
+  // Зведення
+  let html = `<div class="stat-card">
+    <h3>${T.statSummaryTitle}</h3>
+    <div class="stat-row"><span>${T.statTotalTime}</span><span class="stat-big">${T.statHours(time.hours, time.minutes)}</span></div>
+    <div class="stat-row"><span>${T.statTotalTasks}</span><span class="stat-big">${stats.totalTasks}</span></div>`;
+  if (weak) {
+    html += `<div class="stat-row"><span>${T.statWeakest}</span><span class="stat-weak">${T.opLabels[weak.op]} (${weak.accuracy}%)</span></div>`;
+  }
+  html += `</div>`;
+
+  // Активність за тиждень
+  html += `<div class="stat-card"><h3>${T.statActivityTitle}</h3><div class="stat-week">`;
+  week.forEach(d => {
+    const h = Math.round((d.tasks / maxTasks) * 80);
+    html += `<div class="stat-day">
+      <div class="stat-day-bar" style="height:${h}px"></div>
+      <div class="stat-day-label">${d.label}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  // Точність за темами
+  html += `<div class="stat-card"><h3>${T.statAccuracyTitle}</h3>`;
+  ['add', 'sub', 'mul', 'div', 'order', 'frac'].forEach(op => {
+    const acc = statAccuracy(currentProfile, op);
+    if (acc === null) return;
+    const color = acc >= 80 ? 'var(--mint)' : acc >= 50 ? 'var(--amber)' : 'var(--coral)';
+    html += `<div class="stat-row">
+      <span style="min-width:90px">${T.opLabels[op]}</span>
+      <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${acc}%;background:${color}"></div></div>
+      <span>${acc}%</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  statsContentEl.innerHTML = html;
+}
+
+document.getElementById('open-stats-btn').addEventListener('click', () => {
+  // Батьківський замок перед показом статистики
+  openParentGate(() => {
+    renderStats();
+    showScreen('stats');
+  });
+});
+
+document.getElementById('stats-back-btn').addEventListener('click', () => showScreen('menu'));
 
 // ----- Екран лідерів -----
 const opTabsEl = document.getElementById('op-tabs');

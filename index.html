@@ -72,6 +72,7 @@
       <button class="shop-btn" id="open-leaders-btn" data-t="leadersBtn">🏆 Лідери</button>
     </div>
     <button class="shop-btn" id="open-badges-btn" data-t="badgesBtn">🏅 Досягнення</button>
+    <button class="parent-btn" id="open-stats-btn" data-t="parentBtn">👨‍👩‍👧 Для батьків</button>
   </section>
 
   <!-- Екран лідерів -->
@@ -101,6 +102,14 @@
     <p class="subtitle" id="badges-count">0 з 14</p>
 
     <div class="badges-grid" id="badges-grid"></div>
+  </section>
+
+  <!-- Екран батьківської статистики -->
+  <section id="stats-screen" class="screen">
+    <button id="stats-back-btn" class="back-btn" aria-label="Назад">←</button>
+    <h1 class="title small" id="stats-title">Для батьків</h1>
+
+    <div class="stats-content" id="stats-content"></div>
   </section>
 
   <!-- Екран вибору класу -->
@@ -207,6 +216,17 @@
   </div>
 </div>
 
+<div id="parent-gate-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-icon">🔒</div>
+    <h3 class="modal-title" id="gate-title">Для дорослих</h3>
+    <p class="modal-text" id="gate-question">Скільки буде 7 × 8?</p>
+    <input type="number" id="gate-input" class="name-input" inputmode="numeric">
+    <button class="primary-btn" id="gate-submit">Далі</button>
+    <button class="secondary-btn" id="gate-cancel">Скасувати</button>
+  </div>
+</div>
+
 <script src="js/config.js"></script>
 <script src="js/i18n/i18n.js"></script>
 <script src="js/i18n/uk.js"></script>
@@ -217,6 +237,7 @@
 <script src="js/sound.js"></script>
 <script src="js/hints.js"></script>
 <script src="js/badges.js"></script>
+<script src="js/stats.js"></script>
 <script src="js/app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
