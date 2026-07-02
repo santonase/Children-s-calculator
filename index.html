@@ -28,18 +28,18 @@
 
   <!-- Екран профілю: створення / вибір -->
   <section id="profile-screen" class="screen active">
-    <h1 class="title small">Хто грає?</h1>
+    <h1 class="title small" data-t="whoPlays">Хто грає?</h1>
 
     <div id="profile-list" class="profile-list"></div>
 
     <div id="new-profile-form" class="new-profile-form">
-      <p class="subtitle">Обери свого космонавта</p>
+      <p class="subtitle" data-t="chooseAvatar">Обери свого космонавта</p>
       <div class="avatar-grid" id="avatar-grid"></div>
-      <input type="text" id="name-input" class="name-input" placeholder="Твоє ім'я" maxlength="12">
-      <button class="primary-btn" id="create-profile-btn">Почати гру</button>
+      <input type="text" id="name-input" class="name-input" placeholder="Твоє ім'я" data-t-ph="namePlaceholder" maxlength="12">
+      <button class="primary-btn" id="create-profile-btn" data-t="startGame">Почати гру</button>
     </div>
 
-    <button class="secondary-btn" id="add-profile-btn">+ Новий гравець</button>
+    <button class="secondary-btn" id="add-profile-btn" data-t="newPlayer">+ Новий гравець</button>
   </section>
 
   <!-- Екран вибору операції -->
@@ -50,7 +50,8 @@
     <div class="star-balance" id="star-balance">⭐ 0</div>
     <button class="lives-badge" id="lives-badge">❤️ 5</button>
     <button class="sound-toggle" id="sound-toggle" aria-label="Звук">🔊</button>
-    <h1 class="title">Дитячий<br>калькулятор</h1>
+    <button class="lang-toggle" id="lang-toggle" aria-label="Мова">🇺🇦</button>
+    <h1 class="title" data-t-html="appTitle">Дитячий<br>калькулятор</h1>
     <p class="subtitle" id="greeting">Обери, що будемо вивчати</p>
     <div class="status-row">
       <p class="rank-label" id="rank-label">Новачок</p>
@@ -67,16 +68,16 @@
     <div class="menu-grid" id="menu-grid"></div>
 
     <div class="menu-footer-row">
-      <button class="shop-btn" id="open-shop-btn">🛒 Магазин</button>
-      <button class="shop-btn" id="open-leaders-btn">🏆 Лідери</button>
+      <button class="shop-btn" id="open-shop-btn" data-t="shopBtn">🛒 Магазин</button>
+      <button class="shop-btn" id="open-leaders-btn" data-t="leadersBtn">🏆 Лідери</button>
     </div>
-    <button class="shop-btn" id="open-badges-btn">🏅 Досягнення</button>
+    <button class="shop-btn" id="open-badges-btn" data-t="badgesBtn">🏅 Досягнення</button>
   </section>
 
   <!-- Екран лідерів -->
   <section id="leaders-screen" class="screen">
     <button id="leaders-back-btn" class="back-btn" aria-label="Назад">←</button>
-    <h1 class="title small">Лідери</h1>
+    <h1 class="title small" data-t="leadersTitle">Лідери</h1>
 
     <div class="op-tabs" id="op-tabs"></div>
     <div class="level-tabs" id="level-tabs"></div>
@@ -87,7 +88,7 @@
   <!-- Екран магазину -->
   <section id="shop-screen" class="screen">
     <button id="shop-back-btn" class="back-btn" aria-label="Назад">←</button>
-    <h1 class="title small">Магазин ракет</h1>
+    <h1 class="title small" data-t="shopTitle">Магазин ракет</h1>
     <div class="star-balance" id="shop-star-balance">⭐ 0</div>
 
     <div class="shop-grid" id="shop-grid"></div>
@@ -96,7 +97,7 @@
   <!-- Екран досягнень -->
   <section id="badges-screen" class="screen">
     <button id="badges-back-btn" class="back-btn" aria-label="Назад">←</button>
-    <h1 class="title small">Досягнення</h1>
+    <h1 class="title small" data-t="badgesTitle">Досягнення</h1>
     <p class="subtitle" id="badges-count">0 з 14</p>
 
     <div class="badges-grid" id="badges-grid"></div>
@@ -105,8 +106,8 @@
   <!-- Екран вибору класу -->
   <section id="grade-screen" class="screen">
     <button id="grade-back-btn" class="back-btn" aria-label="Назад">←</button>
-    <h1 class="title small">Обери клас</h1>
-    <p class="subtitle">Завдання відповідають шкільній програмі</p>
+    <h1 class="title small" data-t="chooseGrade">Обери клас</h1>
+    <p class="subtitle" data-t="gradeSubtitle">Завдання відповідають шкільній програмі</p>
 
     <div class="level-list" id="grade-list"></div>
   </section>
@@ -177,8 +178,8 @@
     <p id="badge-message" class="badge-message"></p>
     <p id="streak-message" class="streak-message"></p>
     <p id="unlock-message" class="unlock-message"></p>
-    <button class="primary-btn" id="play-again-btn">Грати ще раз</button>
-    <button class="secondary-btn" id="menu-btn">До меню</button>
+    <button class="primary-btn" id="play-again-btn" data-t="playAgain">Грати ще раз</button>
+    <button class="secondary-btn" id="menu-btn" data-t="toMenu">До меню</button>
   </section>
 
   <!-- Екран "Життя скінчились" -->
@@ -207,7 +208,9 @@
 </div>
 
 <script src="js/config.js"></script>
+<script src="js/i18n/i18n.js"></script>
 <script src="js/i18n/uk.js"></script>
+<script src="js/i18n/en.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/logic.js"></script>
 <script src="js/generator.js"></script>

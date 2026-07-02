@@ -26,7 +26,7 @@ function getRank(profile) {
   for (const r of RANKS) {
     if (total >= r.min) rank = r;
   }
-  return rank.name;
+  return T.rankNames[rank.key];
 }
 
 // ----- Стрик -----

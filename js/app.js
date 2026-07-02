@@ -357,7 +357,7 @@ const gradeSelectorEl = document.getElementById('grade-selector');
 
 function renderMenuOperations() {
   currentGrade = getSelectedGrade();
-  gradeSelectorEl.textContent = `${GRADES[currentGrade].name} ▾`;
+  gradeSelectorEl.textContent = `${T.gradeNames[currentGrade]} ▾`;
 
   const sections = GRADES[currentGrade].sections;
   menuGridEl.innerHTML = '';
@@ -366,7 +366,7 @@ function renderMenuOperations() {
     btn.className = 'mode-card';
     btn.innerHTML = `
       <span class="mode-icon">${OP_ICONS[op]}</span>
-      <span class="mode-label">${OP_CONFIG[op].label}</span>
+      <span class="mode-label">${T.opLabels[op]}</span>
     `;
     btn.addEventListener('click', () => {
       renderLevelScreen(op, currentGrade);
@@ -388,8 +388,8 @@ function renderGradeScreen() {
     btn.innerHTML = `
       <span class="level-icon">${meta.icon}</span>
       <span class="level-text">
-        <span class="level-name">${meta.name}</span>
-        <span class="level-hint">${meta.hint}</span>
+        <span class="level-name">${T.gradeNames[grade]}</span>
+        <span class="level-hint">${T.gradeHints[grade]}</span>
       </span>
     `;
     btn.addEventListener('click', () => {
@@ -409,8 +409,8 @@ const levelSubtitleEl = document.getElementById('level-subtitle');
 function renderLevelScreen(op, grade) {
   currentOp = op;
   currentGrade = grade;
-  levelOpTitleEl.textContent = OP_CONFIG[op].label;
-  levelSubtitleEl.textContent = `${GRADES[grade].name} · обери рівень`;
+  levelOpTitleEl.textContent = T.opLabels[op];
+  levelSubtitleEl.textContent = `${T.gradeNames[grade]} · ${T.chooseLevel}`;
   const unlocked = currentProfile ? getUnlockedLevel(currentProfile, op, grade) : 1;
 
   levelListEl.innerHTML = '';
@@ -425,8 +425,8 @@ function renderLevelScreen(op, grade) {
     btn.innerHTML = `
       <span class="level-icon">${meta.icon}</span>
       <span class="level-text">
-        <span class="level-name">${meta.name}</span>
-        <span class="level-hint">${meta.hint}</span>
+        <span class="level-name">${T.levelNames[level]}</span>
+        <span class="level-hint">${T.levelHints[level]}</span>
       </span>
       ${isLocked ? '<span class="level-lock">🔒</span>' : ''}
     `;
@@ -456,8 +456,8 @@ function openBlock(op, grade, level) {
   state.grade = grade;
   state.level = level;
   state.track = currentProfile ? getUnlockedTrack(currentProfile, op, grade, level) : 1;
-  blockTitleEl.textContent = LEVEL_META[level].name;
-  blockSubtitleEl.textContent = `${OP_CONFIG[op].label} · ${GRADES[grade].name}`;
+  blockTitleEl.textContent = T.levelNames[level];
+  blockSubtitleEl.textContent = `${T.opLabels[op]} · ${T.gradeNames[grade]}`;
   updateLivesBadges();
   renderBlockMap();
   showScreen('block');
@@ -627,7 +627,7 @@ function renderOpTabs() {
   Object.keys(OP_CONFIG).forEach(op => {
     const btn = document.createElement('button');
     btn.className = 'tab-btn' + (op === leaderOp ? ' active' : '');
-    btn.textContent = OP_CONFIG[op].label;
+    btn.textContent = T.opLabels[op];
     btn.addEventListener('click', () => {
       leaderOp = op;
       renderOpTabs();
@@ -642,7 +642,7 @@ function renderLevelTabs() {
   [1, 2, 3].forEach(level => {
     const btn = document.createElement('button');
     btn.className = 'tab-btn' + (level === leaderLevel ? ' active' : '');
-    btn.textContent = LEVEL_META[level].name;
+    btn.textContent = T.levelNames[level];
     btn.addEventListener('click', () => {
       leaderLevel = level;
       renderLevelTabs();
@@ -890,8 +890,59 @@ soundToggleEl.addEventListener('click', () => {
 
 updateSoundToggle();
 
+// ----- Локалізація статичних текстів HTML -----
+function applyStaticTexts() {
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.getAttribute('data-t');
+    if (T[key] !== undefined) el.textContent = T[key];
+  });
+  document.querySelectorAll('[data-t-html]').forEach(el => {
+    const key = el.getAttribute('data-t-html');
+    if (T[key] !== undefined) el.innerHTML = T[key];
+  });
+  document.querySelectorAll('[data-t-ph]').forEach(el => {
+    const key = el.getAttribute('data-t-ph');
+    if (T[key] !== undefined) el.setAttribute('placeholder', T[key]);
+  });
+  document.title = getLang() === 'en' ? 'Kids Calculator 🚀' : 'Дитячий калькулятор 🚀';
+}
+
+// ----- Перемикач мови -----
+const langToggleEl = document.getElementById('lang-toggle');
+
+function updateLangToggle() {
+  const lang = getLang();
+  const meta = LANGUAGES.find(l => l.code === lang);
+  langToggleEl.textContent = meta ? meta.flag : '🌐';
+}
+
+function refreshAllScreens() {
+  applyStaticTexts();
+  if (currentProfile) {
+    greetingEl.textContent = T.greeting(currentProfile.name);
+    updateStarBalance();
+    updateLivesBadges();
+    renderMenuOperations();
+    updateDailyGoal();
+  }
+}
+
+langToggleEl.addEventListener('click', () => {
+  // Циклічно перемикаємо між доступними мовами
+  const langs = LANGUAGES.map(l => l.code);
+  const idx = langs.indexOf(getLang());
+  const next = langs[(idx + 1) % langs.length];
+  setLang(next);
+  updateLangToggle();
+  refreshAllScreens();
+});
+
 // ----- Старт застосунку -----
 (function initApp() {
+  applyLocale(getLang());
+  applyStaticTexts();
+  updateLangToggle();
+
   const active = getActiveProfile();
   if (active) {
     enterApp(active);

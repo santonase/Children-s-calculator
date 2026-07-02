@@ -89,11 +89,11 @@ const SKINS = [
 ];
 
 const RANKS = [
-  { min: 0, name: 'Новачок' },
-  { min: 20, name: 'Космонавт' },
-  { min: 50, name: 'Капітан' },
-  { min: 100, name: 'Командир' },
-  { min: 200, name: 'Командир флоту' },
+  { min: 0, key: 'novice' },
+  { min: 20, key: 'cosmonaut' },
+  { min: 50, key: 'captain' },
+  { min: 100, key: 'commander' },
+  { min: 200, key: 'fleet' },
 ];
 
 const LEADERBOARD_KEY = 'kidsCalc.leaderboard';

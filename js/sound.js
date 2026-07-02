@@ -81,21 +81,23 @@ function speak(text) {
   if (!('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'uk-UA';
+  const lang = (typeof getLang === 'function') ? getLang() : 'uk';
+  utter.lang = lang === 'en' ? 'en-US' : 'uk-UA';
   utter.rate = 0.9;
-  // Шукаємо український голос, якщо він встановлений у системі
+  // Шукаємо голос потрібної мови, якщо він встановлений у системі
   const voices = window.speechSynthesis.getVoices();
-  const ukVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('uk'));
-  if (ukVoice) utter.voice = ukVoice;
+  const voice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang));
+  if (voice) utter.voice = voice;
   window.speechSynthesis.speak(utter);
 }
 
 // Побудова тексту озвучення для рівняння з урахуванням пропущеного місця
 function equationToSpeech(op, a, b, answer, missingSlot) {
-  const opWords = { add: 'плюс', sub: 'мінус', mul: 'помножити на', div: 'поділити на' };
-  const w = opWords[op];
-  const A = missingSlot === 'a' ? 'скільки' : a;
-  const B = missingSlot === 'b' ? 'скільки' : b;
-  const R = missingSlot === 'answer' ? 'скільки' : answer;
-  return `${A} ${w} ${B} дорівнює ${R}?`;
+  const w = (T.speechOps && T.speechOps[op]) || '';
+  const howMuch = (T.speechHowMuch) || '?';
+  const equals = (T.speechEquals) || '=';
+  const A = missingSlot === 'a' ? howMuch : a;
+  const B = missingSlot === 'b' ? howMuch : b;
+  const R = missingSlot === 'answer' ? howMuch : answer;
+  return `${A} ${w} ${B} ${equals} ${R}?`;
 }

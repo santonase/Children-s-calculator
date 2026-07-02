@@ -932,3 +932,16 @@ body {
   font-size: 1rem;
   min-height: 1.3rem;
 }
+
+/* --- Перемикач мови --- */
+.lang-toggle {
+  position: absolute;
+  top: 0;
+  left: 106px;
+  background: var(--card);
+  border: none;
+  border-radius: 14px;
+  width: 42px;
+  height: 42px;
+  font-size: 1.1rem;
+}

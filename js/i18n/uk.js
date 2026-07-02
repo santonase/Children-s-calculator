@@ -14,7 +14,7 @@ function twoWay(n, singular, plural) {
   return n === 1 ? singular : plural;
 }
 
-const WORD_TEMPLATES = {
+const UK_TEMPLATES = {
   add: [
     (a, b) => `У капітана ${twoWay(a, 'була', 'було')} ${a} ${threeWay(a, 'зірка', 'зірки', 'зірок')}, він знайшов ще ${b}. Скільки зірок у нього тепер?`,
     (a, b) => `На кораблі ${twoWay(a, 'летів', 'летіло')} ${a} ${threeWay(a, 'астронавт', 'астронавти', 'астронавтів')}, приєдналося ще ${b}. Скільки астронавтів разом?`,
@@ -66,7 +66,7 @@ const WORD_TEMPLATES = {
 };
 
 // ----- Словник текстів інтерфейсу -----
-const T = {
+const UK_DICT = {
   greeting: (name) => `Привіт, ${name}! Обери, що будемо вивчати`,
   rank: (rankName) => `Ранг: ${rankName}`,
   chooseYourLevel: 'Обери свій рівень',
@@ -105,5 +105,40 @@ const T = {
   livesRestored: '❤️ Життя відновлено!',
   encouragementsGood: ['Так!', 'Чудово!', 'Молодець!', 'Влучно!', 'Супер!'],
   encouragementsSoft: ['Майже!', 'Спробуй ще!', 'Не здавайся!', 'Наступного разу вийде!'],
+  // Статичні тексти інтерфейсу
+  appTitle: 'Дитячий<br>калькулятор',
+  whoPlays: 'Хто грає?',
+  chooseAvatar: 'Обери свого космонавта',
+  namePlaceholder: 'Твоє ім\'я',
+  startGame: 'Почати гру',
+  newPlayer: '+ Новий гравець',
+  shopBtn: '🛒 Магазин',
+  leadersBtn: '🏆 Лідери',
+  badgesBtn: '🏅 Досягнення',
+  leadersTitle: 'Лідери',
+  shopTitle: 'Магазин ракет',
+  badgesTitle: 'Досягнення',
+  chooseGrade: 'Обери клас',
+  gradeSubtitle: 'Завдання відповідають шкільній програмі',
+  chooseLevel: 'Обери рівень',
+  playAgain: 'Грати ще раз',
+  toMenu: 'До меню',
+  gradeSelector: (name) => `${name} ▾`,
+  // Назви операцій
+  opLabels: { add: 'Додавання', sub: 'Віднімання', mul: 'Множення', div: 'Ділення', order: 'Порядок дій', frac: 'Частини числа' },
+  // Назви класів
+  gradeNames: { 1: '1 клас', 2: '2 клас', 3: '3 клас', 4: '4 клас' },
+  gradeHints: { 1: 'Числа до 20', 2: 'Числа до 100, таблиця множення', 3: 'Числа до 1000, порядок дій', 4: 'Великі числа, частини' },
+  // Назви типів завдань
+  levelNames: { 1: 'Таблиця', 2: 'Пропущене число', 3: 'Задачі' },
+  levelHints: { 1: 'Прості приклади', 2: 'Знайди невідоме', 3: 'Космічні історії' },
+  // Ранги
+  rankNames: { novice: 'Новачок', cosmonaut: 'Космонавт', captain: 'Капітан', commander: 'Командир', fleet: 'Командир флоту' },
+  // Озвучення операцій
+  speechOps: { add: 'плюс', sub: 'мінус', mul: 'помножити на', div: 'поділити на' },
+  speechEquals: 'дорівнює',
+  speechHowMuch: 'скільки',
 };
+
+registerLocale('uk', UK_DICT, UK_TEMPLATES);
 
