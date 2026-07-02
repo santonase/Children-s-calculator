@@ -765,3 +765,81 @@ body {
   .sky { animation: none; }
   .rocket { transition: none; }
 }
+
+/* --- Звук та озвучення --- */
+.sound-toggle {
+  position: absolute;
+  top: 0;
+  left: 58px;
+  background: var(--card);
+  border: none;
+  border-radius: 14px;
+  width: 42px;
+  height: 42px;
+  font-size: 1.1rem;
+}
+
+.speak-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255,255,255,0.08);
+  border: none;
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  font-size: 1.1rem;
+}
+.problem-card { position: relative; }
+
+/* --- Підказка після помилки --- */
+.hint-panel {
+  display: none;
+  background: var(--card);
+  border: 2px solid var(--amber);
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.hint-panel.show { display: block; }
+
+.hint-visual {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  margin: 4px 0;
+}
+.hint-group {
+  border: 1px dashed var(--text-dim);
+  border-radius: 10px;
+  padding: 5px 8px;
+  margin: 3px;
+  display: inline-flex;
+}
+.hint-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.hint-dot-a { background: var(--mint); }
+.hint-dot-b { background: var(--coral); }
+.hint-dot-x { background: var(--text-dim); position: relative; }
+.hint-dot-x::after {
+  content: '✕';
+  position: absolute;
+  inset: 0;
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--bg-space-2);
+  text-align: center;
+}
+.hint-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.45;
+  margin-top: 6px;
+}

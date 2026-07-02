@@ -10,6 +10,10 @@ let state = {
   blockMistakes: 0,  // помилок за поточну доріжку (для бонусу за ідеальне проходження)
   currentAnswer: null,
   missingSlot: 'answer',
+  currentA: null,
+  currentB: null,
+  currentFullAnswer: null,
+  currentWordText: null,
   blockStartTime: 0,
 };
 
@@ -55,6 +59,8 @@ const rocketEl = document.getElementById('rocket');
 const trackFillEl = document.getElementById('track-fill');
 const problemCardEl = document.getElementById('problem-card');
 const wordViewEl = document.getElementById('word-view');
+const hintPanelEl = document.getElementById('hint-panel');
+const speakBtnEl = document.getElementById('speak-btn');
 const starBalanceEl = document.getElementById('star-balance');
 const rankLabelEl = document.getElementById('rank-label');
 const streakLabelEl = document.getElementById('streak-label');
@@ -63,16 +69,25 @@ function renderProblem() {
   const { a, b, answer } = generateProblem(state.op, state.tier);
   const sign = OP_CONFIG[state.op].sign;
 
+  state.currentA = a;
+  state.currentB = b;
+  state.currentFullAnswer = answer;
+
   feedbackEl.textContent = '';
   feedbackEl.className = 'feedback';
+  hintPanelEl.classList.remove('show');
 
   if (state.level === 3) {
     // Текстова задача: завжди шукаємо результат
     problemCardEl.classList.add('word-mode');
-    wordViewEl.textContent = fillWordTemplate(state.op, a, b);
+    const wordText = fillWordTemplate(state.op, a, b);
+    wordViewEl.textContent = wordText;
+    state.currentWordText = wordText;
     state.currentAnswer = answer;
+    state.missingSlot = 'answer';
   } else {
     problemCardEl.classList.remove('word-mode');
+    state.currentWordText = null;
 
     let missing = 'answer';
     if (state.level === 2) missing = pickMissingSlot();
@@ -99,6 +114,17 @@ function renderProblem() {
   updateScoreLabel();
   updateRocketPosition();
 }
+
+// Озвучення поточного завдання
+function speakCurrentProblem() {
+  if (state.currentWordText) {
+    speak(state.currentWordText);
+  } else {
+    speak(equationToSpeech(state.op, state.currentA, state.currentB, state.currentFullAnswer, state.missingSlot));
+  }
+}
+
+speakBtnEl.addEventListener('click', speakCurrentProblem);
 
 function updateScoreLabel() {
   scoreLabelEl.textContent = T.taskCounter(state.taskNum, TASKS_PER_BLOCK);
@@ -131,6 +157,8 @@ function handleAnswer(choice, btn) {
     feedbackEl.textContent = pickEncouragement(true);
     feedbackEl.className = 'feedback correct';
     revealAnswer();
+    soundCorrect();
+    vibrateCorrect();
     state.correctCount++;
 
     // Зберігаємо прогрес: відкриваємо наступне завдання
@@ -147,13 +175,15 @@ function handleAnswer(choice, btn) {
       }
     }, 900);
   } else {
-    // Помилка: -1 життя, повторюємо це саме завдання
+    // Помилка: -1 життя, показуємо підказку, повторюємо це саме завдання
     btn.classList.add('wrong-flash');
     allBtns.forEach(b => {
       if (parseInt(b.textContent, 10) === state.currentAnswer) {
         b.classList.add('correct-flash');
       }
     });
+    soundWrong();
+    vibrateWrong();
 
     let livesLeft = MAX_LIVES;
     if (currentProfile) {
@@ -165,13 +195,17 @@ function handleAnswer(choice, btn) {
     feedbackEl.textContent = T.tryAgainLives('❤️'.repeat(livesLeft) || T.livesGone);
     feedbackEl.className = 'feedback wrong';
 
+    // Показуємо пояснення-підказку
+    hintPanelEl.innerHTML = buildHint(state.op, state.currentA, state.currentB, state.currentFullAnswer);
+    hintPanelEl.classList.add('show');
+
     setTimeout(() => {
       if (livesLeft <= 0) {
         showNoLives();
       } else {
         renderProblem(); // те саме завдання, нова генерація
       }
-    }, 1100);
+    }, 2200);
   }
 }
 
@@ -190,6 +224,8 @@ const streakMessageEl = document.getElementById('streak-message');
 function finishBlock() {
   updateRocketPosition();
   const correct = state.correctCount;
+  soundTrackDone();
+  vibrateTrackDone();
 
   resultTitle.textContent = T.trackDoneTitle;
   resultText.textContent = T.trackDoneText(TASKS_PER_BLOCK);
@@ -468,6 +504,7 @@ function renderShop() {
         return;
       }
       buySkin(currentProfile, skin.id);
+      soundPurchase();
       renderShop();
       updateStarBalance();
     });
@@ -722,6 +759,21 @@ document.getElementById('switch-profile-btn').addEventListener('click', () => {
   renderProfileScreen();
   showScreen('profile');
 });
+
+// ----- Перемикач звуку -----
+const soundToggleEl = document.getElementById('sound-toggle');
+
+function updateSoundToggle() {
+  soundToggleEl.textContent = isSoundOn() ? '🔊' : '🔇';
+}
+
+soundToggleEl.addEventListener('click', () => {
+  setSoundOn(!isSoundOn());
+  updateSoundToggle();
+  if (isSoundOn()) soundCorrect();
+});
+
+updateSoundToggle();
 
 // ----- Старт застосунку -----
 (function initApp() {

@@ -1,6 +1,6 @@
 // Service Worker: кешування для офлайн-роботи "Дитячого калькулятора"
 
-const CACHE_NAME = 'kids-calc-v3';
+const CACHE_NAME = 'kids-calc-v4';
 const CACHE_URLS = [
   './',
   './index.html',
@@ -10,6 +10,8 @@ const CACHE_URLS = [
   './js/storage.js',
   './js/logic.js',
   './js/generator.js',
+  './js/sound.js',
+  './js/hints.js',
   './js/app.js',
   './manifest.json',
   './icons/icon-192.png',
