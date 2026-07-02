@@ -155,6 +155,23 @@ const UK_DICT = {
   statNoData: 'Ще немає даних. Пограйте, щоб побачити статистику.',
   statHours: (h, m) => h > 0 ? `${h} год ${m} хв` : `${m} хв`,
   gateClose: 'Зрозуміло',
+  // Преміум
+  premiumTitle: 'Повний доступ',
+  premiumSubtitle: 'Відкрий усі можливості',
+  premiumBuy: 'Оформити',
+  premiumRestore: 'Відновити покупку',
+  premiumNote: 'Оплата стане доступною найближчим часом. Наразі це демонстрація.',
+  premiumActive: '👑 Повний доступ активний',
+  premiumActivated: '👑 Повний доступ відкрито!',
+  premiumFeatures: [
+    { icon: '🔢', text: 'Усі операції та рівні без обмежень' },
+    { icon: '♾️', text: 'Необмежені завдання в кожній темі' },
+    { icon: '📊', text: 'Детальна статистика для батьків' },
+    { icon: '🚀', text: 'Усі скіни ракет' },
+    { icon: '🚫', text: 'Без реклами' },
+  ],
+  lockedPremiumToast: '👑 Відкрий повний доступ, щоб продовжити',
+  getPremiumBtn: '👑 Повний доступ',
 };
 
 registerLocale('uk', UK_DICT, UK_TEMPLATES);

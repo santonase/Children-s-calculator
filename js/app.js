@@ -31,6 +31,7 @@ const screens = {
   leaders: document.getElementById('leaders-screen'),
   badges: document.getElementById('badges-screen'),
   stats: document.getElementById('stats-screen'),
+  premium: document.getElementById('premium-screen'),
   nolives: document.getElementById('nolives-screen'),
 };
 
@@ -381,6 +382,13 @@ function renderMenuOperations() {
     });
     menuGridEl.appendChild(btn);
   });
+
+  // Кнопка преміуму: показуємо лише якщо повний доступ ще не активний
+  const premiumCta = document.getElementById('open-premium-btn');
+  if (premiumCta) {
+    premiumCta.textContent = T.getPremiumBtn;
+    premiumCta.style.display = isPremium() ? 'none' : 'block';
+  }
 }
 
 // ----- Екран вибору класу -----
@@ -474,6 +482,20 @@ let currentBlockLevel = 1;
 
 function renderBlockMap() {
   const op = state.op, grade = state.grade, level = state.level;
+
+  // Перевірка freemium-межі: якщо доріжка за межею безкоштовної версії
+  if (isTrackLocked(op, state.track)) {
+    trackIndicatorEl.textContent = T.trackIndicator(state.track, TRACKS_PER_TIER, 0, 100);
+    blockMapEl.innerHTML = `<div class="premium-lock-block">
+      <div class="premium-crown">👑</div>
+      <p class="hint-text">${T.lockedPremiumToast}</p>
+    </div>`;
+    nextTrackBtn.style.display = 'block';
+    nextTrackBtn.textContent = T.getPremiumBtn;
+    nextTrackBtn.onclick = () => { renderPremium(); showScreen('premium'); };
+    return;
+  }
+
   const unlockedTrack = currentProfile ? getUnlockedTrack(currentProfile, op, grade, level) : 1;
   const track = state.track;
   const unlockedTask = (track < unlockedTrack)
@@ -722,6 +744,54 @@ document.getElementById('open-stats-btn').addEventListener('click', () => {
 });
 
 document.getElementById('stats-back-btn').addEventListener('click', () => showScreen('menu'));
+
+// ----- Екран преміум -----
+const premiumFeaturesEl = document.getElementById('premium-features');
+const premiumNoteEl = document.getElementById('premium-note');
+
+function renderPremium() {
+  document.getElementById('premium-title').textContent = T.premiumTitle;
+  document.getElementById('premium-subtitle').textContent = isPremium() ? T.premiumActive : T.premiumSubtitle;
+  document.getElementById('buy-premium-btn').textContent = T.premiumBuy;
+  document.getElementById('restore-premium-btn').textContent = T.premiumRestore;
+  premiumNoteEl.textContent = T.premiumNote;
+
+  premiumFeaturesEl.innerHTML = '';
+  T.premiumFeatures.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'premium-feature';
+    row.innerHTML = `<span class="premium-feature-icon">${f.icon}</span><span>${f.text}</span>`;
+    premiumFeaturesEl.appendChild(row);
+  });
+
+  // Якщо преміум активний — ховаємо кнопки покупки
+  document.getElementById('buy-premium-btn').style.display = isPremium() ? 'none' : 'block';
+}
+
+document.getElementById('buy-premium-btn').addEventListener('click', () => {
+  purchasePremium().then((res) => {
+    if (res.success) {
+      soundPurchase();
+      showToast(T.premiumActivated);
+      renderPremium();
+      renderMenuOperations();
+    }
+  });
+});
+
+document.getElementById('restore-premium-btn').addEventListener('click', () => {
+  restorePurchases().then(() => {
+    renderPremium();
+    showToast(isPremium() ? T.premiumActive : T.premiumNote);
+  });
+});
+
+document.getElementById('premium-back-btn').addEventListener('click', () => showScreen('menu'));
+
+document.getElementById('open-premium-btn').addEventListener('click', () => {
+  renderPremium();
+  showScreen('premium');
+});
 
 // ----- Екран лідерів -----
 const opTabsEl = document.getElementById('op-tabs');

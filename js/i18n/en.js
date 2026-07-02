@@ -139,6 +139,22 @@ const EN_DICT = {
   statNoData: 'No data yet. Play to see statistics.',
   statHours: (h, m) => h > 0 ? `${h}h ${m}m` : `${m}m`,
   gateClose: 'Got it',
+  premiumTitle: 'Full Access',
+  premiumSubtitle: 'Unlock everything',
+  premiumBuy: 'Get it',
+  premiumRestore: 'Restore purchase',
+  premiumNote: 'Payment will be available soon. This is a demo for now.',
+  premiumActive: '👑 Full access active',
+  premiumActivated: '👑 Full access unlocked!',
+  premiumFeatures: [
+    { icon: '🔢', text: 'All operations and levels, no limits' },
+    { icon: '♾️', text: 'Unlimited tasks in every topic' },
+    { icon: '📊', text: 'Detailed stats for parents' },
+    { icon: '🚀', text: 'All rocket skins' },
+    { icon: '🚫', text: 'No ads' },
+  ],
+  lockedPremiumToast: '👑 Unlock full access to continue',
+  getPremiumBtn: '👑 Full Access',
 };
 
 registerLocale('en', EN_DICT, EN_TEMPLATES);
