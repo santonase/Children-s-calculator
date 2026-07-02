@@ -57,24 +57,9 @@
       <p class="streak-label" id="streak-label">🔥 0</p>
     </div>
 
-    <div class="menu-grid">
-      <button class="mode-card" data-op="add">
-        <span class="mode-icon">➕</span>
-        <span class="mode-label">Додавання</span>
-      </button>
-      <button class="mode-card" data-op="sub">
-        <span class="mode-icon">➖</span>
-        <span class="mode-label">Віднімання</span>
-      </button>
-      <button class="mode-card" data-op="mul">
-        <span class="mode-icon">✖️</span>
-        <span class="mode-label">Множення</span>
-      </button>
-      <button class="mode-card" data-op="div">
-        <span class="mode-icon">➗</span>
-        <span class="mode-label">Ділення</span>
-      </button>
-    </div>
+    <button class="grade-selector" id="grade-selector">1 клас ▾</button>
+
+    <div class="menu-grid" id="menu-grid"></div>
 
     <div class="menu-footer-row">
       <button class="shop-btn" id="open-shop-btn">🛒 Магазин</button>
@@ -102,13 +87,13 @@
     <div class="shop-grid" id="shop-grid"></div>
   </section>
 
-  <!-- Екран вибору вікового рівня -->
-  <section id="age-screen" class="screen">
-    <button id="age-back-btn" class="back-btn" aria-label="Назад">←</button>
-    <h1 class="title small" id="age-op-title">Додавання</h1>
-    <p class="subtitle">Обери свій рівень</p>
+  <!-- Екран вибору класу -->
+  <section id="grade-screen" class="screen">
+    <button id="grade-back-btn" class="back-btn" aria-label="Назад">←</button>
+    <h1 class="title small">Обери клас</h1>
+    <p class="subtitle">Завдання відповідають шкільній програмі</p>
 
-    <div class="level-list" id="age-list"></div>
+    <div class="level-list" id="grade-list"></div>
   </section>
 
   <!-- Екран вибору рівня (типу завдань) -->

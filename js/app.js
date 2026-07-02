@@ -2,7 +2,7 @@
 
 let state = {
   op: 'add',
-  tier: 1,           // віковий рівень (1=Космонавт, 2=Пілот, 3=Капітан)
+  grade: 1,          // клас НУШ (1-4)
   level: 1,          // тип завдання (1=Таблиця, 2=Пропущене, 3=Задачі)
   track: 1,          // номер доріжки (1..10, далі нескінченно)
   taskNum: 1,        // поточне завдання в доріжці (1..10)
@@ -22,7 +22,7 @@ let currentProfile = null;
 const screens = {
   profile: document.getElementById('profile-screen'),
   menu: document.getElementById('menu-screen'),
-  age: document.getElementById('age-screen'),
+  grade: document.getElementById('grade-screen'),
   level: document.getElementById('level-screen'),
   block: document.getElementById('block-screen'),
   game: document.getElementById('game-screen'),
@@ -66,7 +66,8 @@ const rankLabelEl = document.getElementById('rank-label');
 const streakLabelEl = document.getElementById('streak-label');
 
 function renderProblem() {
-  const { a, b, answer } = generateProblem(state.op, state.tier);
+  const problem = generateProblem(state.op, state.grade);
+  const { a, b, answer } = problem;
   const sign = OP_CONFIG[state.op].sign;
 
   state.currentA = a;
@@ -77,7 +78,14 @@ function renderProblem() {
   feedbackEl.className = 'feedback';
   hintPanelEl.classList.remove('show');
 
-  if (state.level === 3) {
+  // Порядок дій та частини показуємо як текстовий вираз (режим word-mode)
+  if (state.op === 'order' || state.op === 'frac') {
+    problemCardEl.classList.add('word-mode');
+    wordViewEl.textContent = `${problem.expr} = ?`;
+    state.currentWordText = problem.expr;
+    state.currentAnswer = answer;
+    state.missingSlot = 'answer';
+  } else if (state.level === 3) {
     // Текстова задача: завжди шукаємо результат
     problemCardEl.classList.add('word-mode');
     const wordText = fillWordTemplate(state.op, a, b);
@@ -163,7 +171,7 @@ function handleAnswer(choice, btn) {
 
     // Зберігаємо прогрес: відкриваємо наступне завдання
     if (currentProfile) {
-      setUnlockedTask(currentProfile, state.op, state.tier, state.level, state.taskNum + 1);
+      setUnlockedTask(currentProfile, state.op, state.grade, state.level, state.taskNum + 1);
     }
 
     setTimeout(() => {
@@ -245,15 +253,15 @@ function finishBlock() {
     submitScore(state.op, state.level, currentProfile, points);
 
     // Відкриваємо наступну доріжку (якщо ще не відкрита)
-    const unlockedTrack = getUnlockedTrack(currentProfile, state.op, state.tier, state.level);
+    const unlockedTrack = getUnlockedTrack(currentProfile, state.op, state.grade, state.level);
     if (state.track >= unlockedTrack) {
-      unlockNextTrack(currentProfile, state.op, state.tier, state.level);
+      unlockNextTrack(currentProfile, state.op, state.grade, state.level);
     }
 
     // Тип вважається "пройденим" після першої доріжки → відкриваємо наступний тип
     if (state.track === 1) {
-      markTypeComplete(currentProfile, state.op, state.tier, state.level);
-      const newLevel = maybeUnlockNextLevel(currentProfile, state.op, state.tier, state.level);
+      markTypeComplete(currentProfile, state.op, state.grade, state.level);
+      const newLevel = maybeUnlockNextLevel(currentProfile, state.op, state.grade, state.level);
       if (newLevel) {
         unlockMessageEl.textContent = T.nextLevelUnlocked;
       }
@@ -270,7 +278,7 @@ function finishBlock() {
 }
 
 // ----- Старт блоку (доріжки) -----
-function startBlock(op, tier, level, track, startTask) {
+function startBlock(op, grade, level, track, startTask) {
   // Перевірка життів перед стартом
   if (currentProfile && getLives(currentProfile) <= 0) {
     showNoLives();
@@ -278,7 +286,7 @@ function startBlock(op, tier, level, track, startTask) {
   }
 
   state.op = op;
-  state.tier = tier;
+  state.grade = grade;
   state.level = level;
   state.track = track || 1;
   state.taskNum = startTask || 1;
@@ -295,34 +303,73 @@ function startBlock(op, tier, level, track, startTask) {
   renderProblem();
 }
 
-// ----- Екран вибору вікового рівня -----
-const ageListEl = document.getElementById('age-list');
-const ageOpTitleEl = document.getElementById('age-op-title');
+// ----- Обраний клас (зберігається в профілі) -----
 let currentOp = 'add';
-let currentTier = 1;
+let currentGrade = 1;
 
-function renderAgeScreen(op) {
-  currentOp = op;
-  ageOpTitleEl.textContent = OP_CONFIG[op].label;
+function getSelectedGrade() {
+  if (currentProfile && currentProfile.selectedGrade) return currentProfile.selectedGrade;
+  return 1;
+}
 
-  ageListEl.innerHTML = '';
-  [1, 2, 3].forEach(tier => {
-    const meta = AGE_TIERS[tier];
+function setSelectedGrade(grade) {
+  currentGrade = grade;
+  if (currentProfile) {
+    currentProfile.selectedGrade = grade;
+    updateProfile(currentProfile);
+  }
+}
+
+// Іконки операцій для карток
+const OP_ICONS = { add: '➕', sub: '➖', mul: '✖️', div: '➗', order: '🧮', frac: '½' };
+
+// ----- Головне меню: динамічні картки операцій за класом -----
+const menuGridEl = document.getElementById('menu-grid');
+const gradeSelectorEl = document.getElementById('grade-selector');
+
+function renderMenuOperations() {
+  currentGrade = getSelectedGrade();
+  gradeSelectorEl.textContent = `${GRADES[currentGrade].name} ▾`;
+
+  const sections = GRADES[currentGrade].sections;
+  menuGridEl.innerHTML = '';
+  sections.forEach(op => {
     const btn = document.createElement('button');
-    btn.className = 'level-card';
+    btn.className = 'mode-card';
+    btn.innerHTML = `
+      <span class="mode-icon">${OP_ICONS[op]}</span>
+      <span class="mode-label">${OP_CONFIG[op].label}</span>
+    `;
+    btn.addEventListener('click', () => {
+      renderLevelScreen(op, currentGrade);
+      showScreen('level');
+    });
+    menuGridEl.appendChild(btn);
+  });
+}
+
+// ----- Екран вибору класу -----
+const gradeListEl = document.getElementById('grade-list');
+
+function renderGradeScreen() {
+  gradeListEl.innerHTML = '';
+  [1, 2, 3, 4].forEach(grade => {
+    const meta = GRADES[grade];
+    const btn = document.createElement('button');
+    btn.className = 'level-card' + (grade === getSelectedGrade() ? ' current-grade' : '');
     btn.innerHTML = `
       <span class="level-icon">${meta.icon}</span>
       <span class="level-text">
         <span class="level-name">${meta.name}</span>
-        <span class="level-hint">${meta.ageHint}</span>
+        <span class="level-hint">${meta.hint}</span>
       </span>
     `;
     btn.addEventListener('click', () => {
-      currentTier = tier;
-      renderLevelScreen(op, tier);
-      showScreen('level');
+      setSelectedGrade(grade);
+      renderMenuOperations();
+      showScreen('menu');
     });
-    ageListEl.appendChild(btn);
+    gradeListEl.appendChild(btn);
   });
 }
 
@@ -331,15 +378,17 @@ const levelListEl = document.getElementById('level-list');
 const levelOpTitleEl = document.getElementById('level-op-title');
 const levelSubtitleEl = document.getElementById('level-subtitle');
 
-function renderLevelScreen(op, tier) {
+function renderLevelScreen(op, grade) {
   currentOp = op;
-  currentTier = tier;
+  currentGrade = grade;
   levelOpTitleEl.textContent = OP_CONFIG[op].label;
-  levelSubtitleEl.textContent = T.chooseLevelIn(AGE_TIERS[tier].name);
-  const unlocked = currentProfile ? getUnlockedLevel(currentProfile, op, tier) : 1;
+  levelSubtitleEl.textContent = `${GRADES[grade].name} · обери рівень`;
+  const unlocked = currentProfile ? getUnlockedLevel(currentProfile, op, grade) : 1;
 
   levelListEl.innerHTML = '';
-  [1, 2, 3].forEach(level => {
+  // Порядок дій та частини мають лише один тип завдань (прямий вираз)
+  const levels = (op === 'order' || op === 'frac') ? [1] : [1, 2, 3];
+  levels.forEach(level => {
     const meta = LEVEL_META[level];
     const isLocked = level > unlocked;
 
@@ -357,7 +406,7 @@ function renderLevelScreen(op, tier) {
       if (isLocked) {
         showToast(T.lockedLevelToast);
       } else {
-        openBlock(op, tier, level);
+        openBlock(op, grade, level);
       }
     });
     levelListEl.appendChild(btn);
@@ -371,16 +420,16 @@ const blockSubtitleEl = document.getElementById('block-subtitle');
 const trackIndicatorEl = document.getElementById('track-indicator');
 const nextTrackBtn = document.getElementById('next-track-btn');
 
-function openBlock(op, tier, level) {
+function openBlock(op, grade, level) {
   currentOp = op;
-  currentTier = tier;
+  currentGrade = grade;
   currentBlockLevel = level;
   state.op = op;
-  state.tier = tier;
+  state.grade = grade;
   state.level = level;
-  state.track = currentProfile ? getUnlockedTrack(currentProfile, op, tier, level) : 1;
+  state.track = currentProfile ? getUnlockedTrack(currentProfile, op, grade, level) : 1;
   blockTitleEl.textContent = LEVEL_META[level].name;
-  blockSubtitleEl.textContent = `${OP_CONFIG[op].label} · ${AGE_TIERS[tier].name}`;
+  blockSubtitleEl.textContent = `${OP_CONFIG[op].label} · ${GRADES[grade].name}`;
   updateLivesBadges();
   renderBlockMap();
   showScreen('block');
@@ -389,12 +438,12 @@ function openBlock(op, tier, level) {
 let currentBlockLevel = 1;
 
 function renderBlockMap() {
-  const op = state.op, tier = state.tier, level = state.level;
-  const unlockedTrack = currentProfile ? getUnlockedTrack(currentProfile, op, tier, level) : 1;
+  const op = state.op, grade = state.grade, level = state.level;
+  const unlockedTrack = currentProfile ? getUnlockedTrack(currentProfile, op, grade, level) : 1;
   const track = state.track;
   const unlockedTask = (track < unlockedTrack)
     ? TASKS_PER_BLOCK + 1  // доріжка вже повністю пройдена
-    : (currentProfile ? getUnlockedTask(currentProfile, op, tier, level) : 1);
+    : (currentProfile ? getUnlockedTask(currentProfile, op, grade, level) : 1);
 
   // Індикатор доріжки та завдань
   const totalTaskNum = (track - 1) * TASKS_PER_BLOCK;
@@ -427,49 +476,38 @@ function renderBlockMap() {
         showToast(T.lockedTaskToast);
         return;
       }
-      startBlock(op, tier, level, track, task);
+      startBlock(op, grade, level, track, task);
     });
 
     station.appendChild(dot);
     blockMapEl.appendChild(station);
   }
 
-  // Кнопка "Далі" — показуємо, якщо поточну доріжку пройдено і можна перейти на наступну
+  // Кнопка "Далі"
   const trackDone = unlockedTask > TASKS_PER_BLOCK;
   if (trackDone && track < TRACKS_PER_TIER) {
     nextTrackBtn.style.display = 'block';
     nextTrackBtn.textContent = T.nextTrackBtn(track + 1);
-    nextTrackBtn.onclick = () => {
-      state.track = track + 1;
-      renderBlockMap();
-    };
+    nextTrackBtn.onclick = () => { state.track = track + 1; renderBlockMap(); };
   } else if (trackDone && track >= TRACKS_PER_TIER) {
-    // Усі 100 завдань пройдено — генеруємо ще
     nextTrackBtn.style.display = 'block';
     nextTrackBtn.textContent = T.moreTasksBtn;
-    nextTrackBtn.onclick = () => {
-      state.track = track + 1;
-      renderBlockMap();
-    };
+    nextTrackBtn.onclick = () => { state.track = track + 1; renderBlockMap(); };
   } else {
     nextTrackBtn.style.display = 'none';
   }
 }
 
-document.querySelectorAll('.mode-card').forEach(card => {
-  card.addEventListener('click', () => {
-    renderAgeScreen(card.dataset.op);
-    showScreen('age');
-  });
+// Перемикач класу на головному екрані
+gradeSelectorEl.addEventListener('click', () => {
+  renderGradeScreen();
+  showScreen('grade');
 });
 
-document.getElementById('age-back-btn').addEventListener('click', () => showScreen('menu'));
-document.getElementById('level-back-btn').addEventListener('click', () => {
-  renderAgeScreen(currentOp);
-  showScreen('age');
-});
+document.getElementById('grade-back-btn').addEventListener('click', () => showScreen('menu'));
+document.getElementById('level-back-btn').addEventListener('click', () => showScreen('menu'));
 document.getElementById('block-back-btn').addEventListener('click', () => {
-  renderLevelScreen(currentOp, currentTier);
+  renderLevelScreen(currentOp, currentGrade);
   showScreen('level');
 });
 
@@ -727,6 +765,7 @@ function enterApp(profile) {
   greetingEl.textContent = T.greeting(profile.name);
   updateStarBalance();
   updateLivesBadges();
+  renderMenuOperations();
   showScreen('menu');
 }
 

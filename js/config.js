@@ -11,41 +11,61 @@ const OP_CONFIG = {
   sub: { sign: '−', label: 'Віднімання' },
   mul: { sign: '×', label: 'Множення' },
   div: { sign: '÷', label: 'Ділення' },
+  order: { sign: '', label: 'Порядок дій' },
+  frac: { sign: '', label: 'Частини числа' },
 };
 
-// ----- Вікові рівні складності -----
-const AGE_TIERS = {
+// ----- Класи НУШ -----
+// Кожен клас містить лише ті розділи, що передбачені шкільною програмою.
+// ranges задають діапазони чисел для генератора під цей клас.
+const GRADES = {
   1: {
-    name: 'Космонавт',
-    ageHint: '5-6 років',
-    icon: '🚀',
-    ranges: {
-      add: { maxSum: 10, maxTerm: 10, carry: false },
-      sub: { maxTerm: 10 },
-      mul: { maxFactor: 5 },
-      div: { maxFactor: 5 },
-    },
-  },
-  2: {
-    name: 'Пілот',
-    ageHint: '7-8 років',
-    icon: '🛰️',
+    name: '1 клас',
+    icon: '1️⃣',
+    hint: 'Числа до 20',
+    sections: ['add', 'sub'],
     ranges: {
       add: { maxSum: 20, maxTerm: 20, carry: true },
       sub: { maxTerm: 20 },
-      mul: { maxFactor: 10 },
-      div: { maxFactor: 10 },
     },
   },
-  3: {
-    name: 'Капітан',
-    ageHint: '9-10 років',
-    icon: '🪐',
+  2: {
+    name: '2 клас',
+    icon: '2️⃣',
+    hint: 'Числа до 100, таблиця множення',
+    sections: ['add', 'sub', 'mul', 'div'],
     ranges: {
       add: { maxSum: 100, maxTerm: 100, carry: true },
       sub: { maxTerm: 100 },
-      mul: { maxFactor: 10, maxProduct: 100 },
-      div: { maxFactor: 10, maxProduct: 100 },
+      mul: { maxFactor: 9 },
+      div: { maxFactor: 9 },
+    },
+  },
+  3: {
+    name: '3 клас',
+    icon: '3️⃣',
+    hint: 'Числа до 1000, порядок дій',
+    sections: ['add', 'sub', 'mul', 'div', 'order'],
+    ranges: {
+      add: { maxSum: 1000, maxTerm: 1000, carry: true },
+      sub: { maxTerm: 1000 },
+      mul: { maxFactor: 10, maxProduct: 100, extra: true }, // + позатабличне (24×3)
+      div: { maxFactor: 10, maxProduct: 100, extra: true },
+      order: { maxTerm: 20 }, // вирази у 2 дії з дужками
+    },
+  },
+  4: {
+    name: '4 клас',
+    icon: '4️⃣',
+    hint: 'Великі числа, частини',
+    sections: ['add', 'sub', 'mul', 'div', 'order', 'frac'],
+    ranges: {
+      add: { maxSum: 10000, maxTerm: 10000, carry: true },
+      sub: { maxTerm: 10000 },
+      mul: { maxFactor: 100, maxProduct: 1000, extra: true },
+      div: { maxFactor: 100, maxProduct: 1000, extra: true },
+      order: { maxTerm: 100 },
+      frac: { maxNumber: 100 }, // знайти половину/третину/чверть
     },
   },
 };

@@ -14,7 +14,7 @@ const KVStore = {
 };
 
 // ----- Версія схеми профілю та міграції -----
-const PROFILE_SCHEMA_VERSION = 3;
+const PROFILE_SCHEMA_VERSION = 4;
 
 function migrateProfile(p) {
   if (!p) return p;
@@ -35,6 +35,10 @@ function migrateProfile(p) {
   if (v < 3) {
     if (!p.typeProgress) p.typeProgress = {};
     if (!p.blockProgress) p.blockProgress = {};
+  }
+  // v3 -> v4: перехід на класи НУШ (обраний клас за замовчуванням 1)
+  if (v < 4) {
+    if (!p.selectedGrade) p.selectedGrade = 1;
   }
   p.schemaVersion = PROFILE_SCHEMA_VERSION;
   return p;
@@ -80,7 +84,8 @@ function createProfile(name, avatar) {
     claimedStreakBonuses: [],
     lives: MAX_LIVES,
     livesUpdatedAt: Date.now(),
-    blockProgress: {}, // ключ "op-tier-level" -> { unlockedTrack, unlockedTask, completed }
+    blockProgress: {}, // ключ "op-grade-level" -> { unlockedTrack, unlockedTask, completed }
+    selectedGrade: 1,
     schemaVersion: PROFILE_SCHEMA_VERSION,
   };
   profiles.push(profile);

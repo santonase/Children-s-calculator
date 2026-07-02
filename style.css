@@ -843,3 +843,29 @@ body {
   line-height: 1.45;
   margin-top: 6px;
 }
+
+/* --- Вибір класу --- */
+.grade-selector {
+  background: var(--card);
+  border: 2px solid var(--amber);
+  border-radius: 16px;
+  color: var(--amber);
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 12px 24px;
+  margin: 4px 0 16px;
+}
+.grade-selector:active { transform: translateY(2px); }
+
+.level-card.current-grade {
+  border: 3px solid var(--mint);
+}
+#grade-screen {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding-top: 48px;
+}
