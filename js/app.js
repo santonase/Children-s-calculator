@@ -1115,11 +1115,36 @@ langToggleEl.addEventListener('click', () => {
   refreshAllScreens();
 });
 
+// ----- Перемикач теми (темна/світла) -----
+const THEME_KEY = 'kidsCalc.theme';
+const themeToggleEl = document.getElementById('theme-toggle');
+
+function getTheme() {
+  return KVStore.getRaw(THEME_KEY) === 'light' ? 'light' : 'dark';
+}
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    themeToggleEl.textContent = '☀️';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    themeToggleEl.textContent = '🌙';
+  }
+}
+
+themeToggleEl.addEventListener('click', () => {
+  const next = getTheme() === 'light' ? 'dark' : 'light';
+  KVStore.setRaw(THEME_KEY, next);
+  applyTheme(next);
+});
+
 // ----- Старт застосунку -----
 (function initApp() {
   applyLocale(getLang());
   applyStaticTexts();
   updateLangToggle();
+  applyTheme(getTheme());
 
   const active = getActiveProfile();
   if (active) {

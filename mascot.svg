@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Шолом (прозоре скло) -->
+  <circle cx="100" cy="95" r="72" fill="#4ECDC4" opacity="0.15"/>
+  <circle cx="100" cy="95" r="72" fill="none" stroke="#4ECDC4" stroke-width="4" opacity="0.5"/>
+  <!-- Відблиск на шоломі -->
+  <ellipse cx="72" cy="62" rx="20" ry="28" fill="#FDFBF7" opacity="0.25" transform="rotate(-25 72 62)"/>
+
+  <!-- Морда лисеняти -->
+  <!-- Вуха -->
+  <path d="M56 70 L46 30 L82 56 Z" fill="#FF6B4A"/>
+  <path d="M144 70 L154 30 L118 56 Z" fill="#FF6B4A"/>
+  <path d="M58 64 L52 42 L74 56 Z" fill="#2A2E45"/>
+  <path d="M142 64 L148 42 L126 56 Z" fill="#2A2E45"/>
+
+  <!-- Голова -->
+  <path d="M100 55
+           C132 55 150 78 150 105
+           C150 135 128 158 100 158
+           C72 158 50 135 50 105
+           C50 78 68 55 100 55 Z" fill="#FF6B4A"/>
+
+  <!-- Біла мордочка -->
+  <path d="M100 92
+           C118 92 130 108 130 126
+           C130 145 116 158 100 158
+           C84 158 70 145 70 126
+           C70 108 82 92 100 92 Z" fill="#FDFBF7"/>
+
+  <!-- Щічки/боки морди білі -->
+  <path d="M62 100 Q58 120 72 132 L82 105 Z" fill="#FDFBF7"/>
+  <path d="M138 100 Q142 120 128 132 L118 105 Z" fill="#FDFBF7"/>
+
+  <!-- Очі -->
+  <ellipse cx="82" cy="104" rx="8" ry="10" fill="#2A2E45"/>
+  <ellipse cx="118" cy="104" rx="8" ry="10" fill="#2A2E45"/>
+  <circle cx="85" cy="100" r="3" fill="#FDFBF7"/>
+  <circle cx="121" cy="100" r="3" fill="#FDFBF7"/>
+
+  <!-- Носик -->
+  <path d="M100 122 L92 130 Q100 136 108 130 Z" fill="#2A2E45"/>
+  <!-- Усмішка -->
+  <path d="M100 136 Q90 144 82 138" fill="none" stroke="#2A2E45" stroke-width="3" stroke-linecap="round"/>
+  <path d="M100 136 Q110 144 118 138" fill="none" stroke="#2A2E45" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Антена на шоломі -->
+  <line x1="100" y1="23" x2="100" y2="10" stroke="#FFD166" stroke-width="3"/>
+  <circle cx="100" cy="8" r="5" fill="#FFD166"/>
+</svg>

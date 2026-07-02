@@ -9,6 +9,18 @@
   --text-dim: #A6A9C8;
 }
 
+/* Світла тема */
+[data-theme="light"] {
+  --bg-space: #EEF1FB;
+  --bg-space-2: #DDE3F5;
+  --coral: #F0562F;
+  --mint: #1FA89E;
+  --amber: #E0A020;
+  --white: #2A2E45;
+  --card: #FFFFFF;
+  --text-dim: #6B7095;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
@@ -1093,4 +1105,80 @@ body {
   gap: 12px;
   padding: 40px 20px;
   text-align: center;
+}
+
+/* ============ АДАПТИВНІСТЬ: планшет і десктоп ============ */
+@media (min-width: 700px) {
+  .app {
+    max-width: 640px;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+  .title { font-size: 3.2rem; }
+  .menu-grid { gap: 20px; }
+  .mode-card { padding: 36px 16px; }
+  .mode-icon { font-size: 3rem; }
+  .problem-card { font-size: 2.6rem; padding: 28px; }
+  .choice-btn { font-size: 1.8rem; padding: 22px 0; }
+  .badges-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+@media (min-width: 1024px) {
+  .app {
+    max-width: 900px;
+  }
+  /* Головне меню: операції у 4 колонки на широкому екрані */
+  #menu-screen .menu-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .title { font-size: 3.6rem; }
+  .shop-grid { grid-template-columns: repeat(3, 1fr); }
+  .badges-grid { grid-template-columns: repeat(4, 1fr); }
+  /* Карта доріжки: станції в ряд, а не вузькою колонкою */
+  .block-map {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* На дуже широких екранах додаємо бічні "космічні" поля з легким сяйвом */
+@media (min-width: 1024px) {
+  body {
+    background:
+      radial-gradient(ellipse at top, rgba(78,205,196,0.06), transparent 60%),
+      var(--bg-space);
+  }
+}
+
+/* --- Талісман --- */
+.mascot {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 8px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@media (min-width: 700px) {
+  .mascot { width: 160px; height: 160px; }
+}
+
+/* --- Перемикач теми --- */
+.theme-toggle {
+  position: absolute;
+  top: 0;
+  left: 154px;
+  background: var(--card);
+  border: none;
+  border-radius: 14px;
+  width: 42px;
+  height: 42px;
+  font-size: 1.1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot { animation: none; }
 }
