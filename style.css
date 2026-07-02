@@ -869,3 +869,66 @@ body {
   gap: 4px;
   padding-top: 48px;
 }
+
+/* --- Щоденна ціль --- */
+.daily-goal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--white);
+}
+.daily-goal.done {
+  border: 2px solid var(--mint);
+}
+.daily-goal-ring { font-size: 1.3rem; }
+
+/* --- Досягнення --- */
+#badges-screen {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  padding-top: 48px;
+  gap: 4px;
+}
+.badges-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+  margin-top: 16px;
+}
+.badge-card {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 5px 0 rgba(0,0,0,0.25);
+}
+.badge-card.locked { opacity: 0.4; }
+.badge-icon { font-size: 2.2rem; }
+.badge-name { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--white); }
+.badge-desc { font-size: 0.78rem; color: var(--text-dim); font-weight: 700; line-height: 1.3; }
+
+/* --- Повідомлення на результаті --- */
+.chest-message {
+  color: var(--amber);
+  font-weight: 800;
+  font-size: 1.1rem;
+  min-height: 1.4rem;
+}
+.badge-message {
+  color: var(--mint);
+  font-weight: 800;
+  font-size: 1rem;
+  min-height: 1.3rem;
+}

@@ -29,6 +29,7 @@ const screens = {
   result: document.getElementById('result-screen'),
   shop: document.getElementById('shop-screen'),
   leaders: document.getElementById('leaders-screen'),
+  badges: document.getElementById('badges-screen'),
   nolives: document.getElementById('nolives-screen'),
 };
 
@@ -228,6 +229,8 @@ const resultText = document.getElementById('result-text');
 const unlockMessageEl = document.getElementById('unlock-message');
 const starsEarnedEl = document.getElementById('stars-earned');
 const streakMessageEl = document.getElementById('streak-message');
+const chestMessageEl = document.getElementById('chest-message');
+const badgeMessageEl = document.getElementById('badge-message');
 
 function finishBlock() {
   updateRocketPosition();
@@ -241,12 +244,16 @@ function finishBlock() {
   unlockMessageEl.textContent = '';
   starsEarnedEl.textContent = '';
   streakMessageEl.textContent = '';
+  chestMessageEl.textContent = '';
+  badgeMessageEl.textContent = '';
 
   if (currentProfile) {
     const perfect = state.blockMistakes === 0;
     const earned = perfect ? 3 : 1;
     awardStars(currentProfile, earned);
     starsEarnedEl.textContent = T.starsEarned(earned);
+
+    if (perfect) registerPerfectTrack(currentProfile);
 
     const elapsedSeconds = Math.floor((Date.now() - state.blockStartTime) / 1000);
     const points = Math.max(0, correct * 10 - elapsedSeconds);
@@ -267,11 +274,32 @@ function finishBlock() {
       }
     }
 
+    // Сундук-нагорода за кожну 5-ту доріжку
+    const chest = maybeChestReward(currentProfile);
+    if (chest > 0) {
+      chestMessageEl.textContent = T.chestReward(chest);
+      soundPurchase();
+    }
+
+    // Щоденна ціль
+    const goalDone = registerDailyProgress(currentProfile);
+    if (goalDone) {
+      chestMessageEl.textContent = (chestMessageEl.textContent ? chestMessageEl.textContent + '  ' : '') + T.dailyGoalDone;
+    }
+
     const streakBonus = updateStreak(currentProfile);
     if (streakBonus) {
       streakMessageEl.textContent = T.streakBonus(streakBonus.days, streakBonus.stars);
     }
+
+    // Перевірка бейджів (після всіх нарахувань)
+    const newBadges = checkBadges(currentProfile);
+    if (newBadges.length > 0) {
+      badgeMessageEl.textContent = T.badgeUnlocked(newBadges[0].icon, newBadges[0].name);
+    }
+
     updateStarBalance();
+    updateDailyGoal();
   }
 
   setTimeout(() => showScreen('result'), 500);
@@ -557,6 +585,36 @@ document.getElementById('open-shop-btn').addEventListener('click', () => {
 
 document.getElementById('shop-back-btn').addEventListener('click', () => showScreen('menu'));
 
+// ----- Екран досягнень -----
+const badgesGridEl = document.getElementById('badges-grid');
+const badgesCountEl = document.getElementById('badges-count');
+
+function renderBadges() {
+  if (!currentProfile) return;
+  const owned = getBadges(currentProfile);
+  badgesCountEl.textContent = T.badgesCount(owned.length, BADGES.length);
+
+  badgesGridEl.innerHTML = '';
+  BADGES.forEach(badge => {
+    const isOwned = owned.includes(badge.id);
+    const card = document.createElement('div');
+    card.className = 'badge-card' + (isOwned ? '' : ' locked');
+    card.innerHTML = `
+      <span class="badge-icon">${isOwned ? badge.icon : '🔒'}</span>
+      <span class="badge-name">${badge.name}</span>
+      <span class="badge-desc">${badge.desc}</span>
+    `;
+    badgesGridEl.appendChild(card);
+  });
+}
+
+document.getElementById('open-badges-btn').addEventListener('click', () => {
+  renderBadges();
+  showScreen('badges');
+});
+
+document.getElementById('badges-back-btn').addEventListener('click', () => showScreen('menu'));
+
 // ----- Екран лідерів -----
 const opTabsEl = document.getElementById('op-tabs');
 const levelTabsEl = document.getElementById('level-tabs');
@@ -766,6 +824,7 @@ function enterApp(profile) {
   updateStarBalance();
   updateLivesBadges();
   renderMenuOperations();
+  updateDailyGoal();
   showScreen('menu');
 }
 
@@ -774,6 +833,23 @@ function updateStarBalance() {
   starBalanceEl.textContent = T.starsBalance(getStars(currentProfile));
   rankLabelEl.textContent = T.rank(getRank(currentProfile));
   streakLabelEl.textContent = T.streakLabel(getStreak(currentProfile));
+}
+
+const dailyGoalEl = document.getElementById('daily-goal');
+const dailyGoalTextEl = document.getElementById('daily-goal-text');
+const dailyGoalRingEl = document.getElementById('daily-goal-ring');
+
+function updateDailyGoal() {
+  if (!currentProfile) return;
+  const done = getDailyProgress(currentProfile);
+  dailyGoalTextEl.textContent = T.dailyGoalText(Math.min(done, DAILY_GOAL), DAILY_GOAL);
+  if (isDailyGoalDone(currentProfile)) {
+    dailyGoalEl.classList.add('done');
+    dailyGoalRingEl.textContent = '✅';
+  } else {
+    dailyGoalEl.classList.remove('done');
+    dailyGoalRingEl.textContent = '🎯';
+  }
 }
 
 createProfileBtn.addEventListener('click', () => {

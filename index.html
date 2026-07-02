@@ -59,12 +59,18 @@
 
     <button class="grade-selector" id="grade-selector">1 клас ▾</button>
 
+    <div class="daily-goal" id="daily-goal">
+      <span class="daily-goal-ring" id="daily-goal-ring">🎯</span>
+      <span id="daily-goal-text">Щоденна ціль: 0/2 доріжки</span>
+    </div>
+
     <div class="menu-grid" id="menu-grid"></div>
 
     <div class="menu-footer-row">
       <button class="shop-btn" id="open-shop-btn">🛒 Магазин</button>
       <button class="shop-btn" id="open-leaders-btn">🏆 Лідери</button>
     </div>
+    <button class="shop-btn" id="open-badges-btn">🏅 Досягнення</button>
   </section>
 
   <!-- Екран лідерів -->
@@ -85,6 +91,15 @@
     <div class="star-balance" id="shop-star-balance">⭐ 0</div>
 
     <div class="shop-grid" id="shop-grid"></div>
+  </section>
+
+  <!-- Екран досягнень -->
+  <section id="badges-screen" class="screen">
+    <button id="badges-back-btn" class="back-btn" aria-label="Назад">←</button>
+    <h1 class="title small">Досягнення</h1>
+    <p class="subtitle" id="badges-count">0 з 14</p>
+
+    <div class="badges-grid" id="badges-grid"></div>
   </section>
 
   <!-- Екран вибору класу -->
@@ -158,6 +173,8 @@
     <h2 id="result-title">Молодець!</h2>
     <p id="result-text">Ти відповів правильно 10 з 10 разів!</p>
     <p id="stars-earned" class="stars-earned"></p>
+    <p id="chest-message" class="chest-message"></p>
+    <p id="badge-message" class="badge-message"></p>
     <p id="streak-message" class="streak-message"></p>
     <p id="unlock-message" class="unlock-message"></p>
     <button class="primary-btn" id="play-again-btn">Грати ще раз</button>
@@ -196,6 +213,7 @@
 <script src="js/generator.js"></script>
 <script src="js/sound.js"></script>
 <script src="js/hints.js"></script>
+<script src="js/badges.js"></script>
 <script src="js/app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {

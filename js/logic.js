@@ -65,6 +65,65 @@ function getStreak(profile) {
   return profile.streak || 0;
 }
 
+// ----- Щоденна ціль -----
+// Ціль: пройти DAILY_GOAL доріжок за календарний день.
+const DAILY_GOAL = 2;
+
+function getDailyProgress(profile) {
+  const today = dateKey(Date.now());
+  if (!profile.dailyGoal || profile.dailyGoal.date !== today) {
+    return 0;
+  }
+  return profile.dailyGoal.done || 0;
+}
+
+// Реєструє проходження доріжки для щоденної цілі.
+// Повертає true, якщо ціль щойно виконано (для разової нагороди).
+function registerDailyProgress(profile) {
+  const today = dateKey(Date.now());
+  if (!profile.dailyGoal || profile.dailyGoal.date !== today) {
+    profile.dailyGoal = { date: today, done: 0, rewarded: false };
+  }
+  profile.dailyGoal.done += 1;
+
+  let justCompleted = false;
+  if (profile.dailyGoal.done >= DAILY_GOAL && !profile.dailyGoal.rewarded) {
+    profile.dailyGoal.rewarded = true;
+    justCompleted = true;
+    awardStars(profile, 5); // бонус за виконання щоденної цілі
+  }
+  updateProfile(profile);
+  return justCompleted;
+}
+
+function isDailyGoalDone(profile) {
+  return getDailyProgress(profile) >= DAILY_GOAL;
+}
+
+// ----- Сундук-нагорода за кожну 5-ту доріжку -----
+// Повертає кількість зірок із сундука, або 0, якщо цього разу сундука немає.
+function maybeChestReward(profile) {
+  profile.tracksToChest = (profile.tracksToChest || 0) + 1;
+  if (profile.tracksToChest >= 5) {
+    profile.tracksToChest = 0;
+    // Випадкова нагорода: 3, 5 або 8 зірок
+    const options = [3, 5, 8];
+    const reward = options[Math.floor(Math.random() * options.length)];
+    awardStars(profile, reward);
+    updateProfile(profile);
+    return reward;
+  }
+  updateProfile(profile);
+  return 0;
+}
+
+// Лічильник ідеальних доріжок (без помилок) — для бейджа perfect5
+function registerPerfectTrack(profile) {
+  profile.perfectTracks = (profile.perfectTracks || 0) + 1;
+  updateProfile(profile);
+}
+
+
 // ----- Життя -----
 // Перераховує життя з урахуванням часу, що минув (регенерація)
 function refreshLives(profile) {

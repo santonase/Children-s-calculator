@@ -14,7 +14,7 @@ const KVStore = {
 };
 
 // ----- Версія схеми профілю та міграції -----
-const PROFILE_SCHEMA_VERSION = 4;
+const PROFILE_SCHEMA_VERSION = 5;
 
 function migrateProfile(p) {
   if (!p) return p;
@@ -39,6 +39,13 @@ function migrateProfile(p) {
   // v3 -> v4: перехід на класи НУШ (обраний клас за замовчуванням 1)
   if (v < 4) {
     if (!p.selectedGrade) p.selectedGrade = 1;
+  }
+  // v4 -> v5: досягнення, щоденні цілі, сундуки
+  if (v < 5) {
+    if (!p.badges) p.badges = [];
+    if (p.tracksToChest === undefined) p.tracksToChest = 0;
+    if (p.perfectTracks === undefined) p.perfectTracks = 0;
+    if (!p.dailyGoal) p.dailyGoal = null;
   }
   p.schemaVersion = PROFILE_SCHEMA_VERSION;
   return p;
@@ -86,6 +93,10 @@ function createProfile(name, avatar) {
     livesUpdatedAt: Date.now(),
     blockProgress: {}, // ключ "op-grade-level" -> { unlockedTrack, unlockedTask, completed }
     selectedGrade: 1,
+    badges: [],
+    tracksToChest: 0,
+    perfectTracks: 0,
+    dailyGoal: null,
     schemaVersion: PROFILE_SCHEMA_VERSION,
   };
   profiles.push(profile);
