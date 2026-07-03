@@ -96,7 +96,7 @@ const EN_DICT = {
   encouragementsGood: ['Yes!', 'Great!', 'Well done!', 'Perfect!', 'Awesome!'],
   encouragementsSoft: ['Almost!', 'Try again!', "Don't give up!", "You'll get it next time!"],
   // Static UI texts
-  appTitle: 'Kids<br>Calculator',
+  appTitle: 'Cosmik<br><span class="title-sub">math for kids</span>',
   whoPlays: 'Who is playing?',
   chooseAvatar: 'Choose your astronaut',
   namePlaceholder: 'Your name',

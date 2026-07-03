@@ -167,10 +167,45 @@ body {
 /* --- Меню --- */
 #menu-screen {
   position: relative;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   text-align: center;
   gap: 8px;
+}
+
+/* Верхній рядок: перемикачі зліва, статус справа */
+.topbar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.topbar-left {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.topbar-right {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+.topbar-btn {
+  background: var(--card);
+  border: none;
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  font-size: 1.1rem;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+}
+.topbar-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.2); }
+.topbar-right .star-balance,
+.topbar-right .lives-badge {
+  position: static;
 }
 
 .title {
@@ -1181,4 +1216,14 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .mascot { animation: none; }
+}
+
+/* --- Підзаголовок у назві бренду --- */
+.title-sub {
+  display: block;
+  font-size: 0.42em;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  margin-top: 2px;
 }

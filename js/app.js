@@ -1082,7 +1082,9 @@ function applyStaticTexts() {
     const key = el.getAttribute('data-t-ph');
     if (T[key] !== undefined) el.setAttribute('placeholder', T[key]);
   });
-  document.title = getLang() === 'en' ? 'Kids Calculator 🚀' : 'Дитячий калькулятор 🚀';
+  document.title = getLang() === 'en'
+    ? 'Cosmik — Math Games for Kids | Grades 1-4, Times Tables, Word Problems'
+    : 'Космік — Математика для дітей | 1-4 клас, таблиця множення, задачі';
 }
 
 // ----- Перемикач мови -----

@@ -3,7 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Дитячий калькулятор 🚀</title>
+<title>Космік — Математика для дітей | 1-4 клас, таблиця множення, задачі</title>
+<meta name="description" content="Космік — безкоштовна гра-тренажер з математики для дітей 1-4 класу. Додавання, віднімання, таблиця множення, ділення, задачі. Навчання у формі космічної пригоди.">
+<meta name="keywords" content="математика для дітей, таблиця множення, математика 1 клас, математика 2 клас, тренажер з математики, гра математика, додавання віднімання, math games for kids, times tables">
+
+<!-- Open Graph (для поширення в соцмережах) -->
+<meta property="og:title" content="Космік — Математика для дітей">
+<meta property="og:description" content="Безкоштовна гра-тренажер з математики для дітей 1-4 класу: таблиця множення, задачі, приклади у формі космічної пригоди.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="icons/icon-512.png">
+<meta property="og:url" content="https://santonase.github.io/Children-s-calculator/">
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
@@ -11,7 +20,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Калькулятор">
+<meta name="apple-mobile-web-app-title" content="Космік">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 
@@ -45,14 +54,21 @@
 
   <!-- Екран вибору операції -->
   <section id="menu-screen" class="screen">
-    <button id="switch-profile-btn" class="back-btn profile-badge" aria-label="Змінити профіль">
-      <span id="profile-avatar-badge">🚀</span>
-    </button>
-    <div class="star-balance" id="star-balance">⭐ 0</div>
-    <button class="lives-badge" id="lives-badge">❤️ 5</button>
-    <button class="sound-toggle" id="sound-toggle" aria-label="Звук">🔊</button>
-    <button class="lang-toggle" id="lang-toggle" aria-label="Мова">🇺🇦</button>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Тема">🌙</button>
+    <div class="topbar">
+      <div class="topbar-left">
+        <button id="switch-profile-btn" class="topbar-btn" aria-label="Змінити профіль">
+          <span id="profile-avatar-badge">🚀</span>
+        </button>
+        <button class="topbar-btn" id="sound-toggle" aria-label="Звук">🔊</button>
+        <button class="topbar-btn" id="lang-toggle" aria-label="Мова">🇺🇦</button>
+        <button class="topbar-btn" id="theme-toggle" aria-label="Тема">🌙</button>
+      </div>
+      <div class="topbar-right">
+        <div class="star-balance" id="star-balance">⭐ 0</div>
+        <button class="lives-badge" id="lives-badge">❤️ 5</button>
+      </div>
+    </div>
+
     <h1 class="title" data-t-html="appTitle">Дитячий<br>калькулятор</h1>
     <p class="subtitle" id="greeting">Обери, що будемо вивчати</p>
     <div class="status-row">

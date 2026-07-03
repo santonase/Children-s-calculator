@@ -106,7 +106,7 @@ const UK_DICT = {
   encouragementsGood: ['Так!', 'Чудово!', 'Молодець!', 'Влучно!', 'Супер!'],
   encouragementsSoft: ['Майже!', 'Спробуй ще!', 'Не здавайся!', 'Наступного разу вийде!'],
   // Статичні тексти інтерфейсу
-  appTitle: 'Дитячий<br>калькулятор',
+  appTitle: 'Космік<br><span class="title-sub">математика для дітей</span>',
   whoPlays: 'Хто грає?',
   chooseAvatar: 'Обери свого космонавта',
   namePlaceholder: 'Твоє ім\'я',
