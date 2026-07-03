@@ -112,6 +112,7 @@ const EN_DICT = {
   gradeSubtitle: 'Tasks follow the school curriculum',
   chooseLevel: 'Choose a level',
   playAgain: 'Play again',
+  nextTrackAfter: 'Next track ▶',
   toMenu: 'To menu',
   gradeSelector: (name) => `${name} ▾`,
   opLabels: { add: 'Addition', sub: 'Subtraction', mul: 'Multiplication', div: 'Division', order: 'Order of operations', frac: 'Fractions' },

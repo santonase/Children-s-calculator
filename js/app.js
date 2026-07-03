@@ -248,6 +248,9 @@ function finishBlock() {
   resultTitle.textContent = T.trackDoneTitle;
   resultText.textContent = T.trackDoneText(TASKS_PER_BLOCK);
 
+  // Кнопка веде на наступну доріжку
+  document.getElementById('play-again-btn').textContent = T.nextTrackAfter;
+
   unlockMessageEl.textContent = '';
   starsEarnedEl.textContent = '';
   streakMessageEl.textContent = '';
@@ -271,6 +274,14 @@ function finishBlock() {
     const unlockedTrack = getUnlockedTrack(currentProfile, state.op, state.grade, state.level);
     if (state.track >= unlockedTrack) {
       unlockNextTrack(currentProfile, state.op, state.grade, state.level);
+    }
+
+    // Просуваємо гравця на наступну доріжку, щоб "Грати ще раз" відкривав
+    // нову доріжку з новими завданнями, а не вже пройдену.
+    if (state.track < TRACKS_PER_TIER) {
+      state.nextTrackAfterResult = state.track + 1;
+    } else {
+      state.nextTrackAfterResult = state.track + 1; // нескінченна генерація далі
     }
 
     // Тип вважається "пройденим" після першої доріжки → відкриваємо наступний тип
@@ -869,8 +880,23 @@ document.getElementById('back-btn').addEventListener('click', () => {
 
 // "Грати ще раз" на екрані результату - повертає на карту блоку
 document.getElementById('play-again-btn').addEventListener('click', () => {
-  renderBlockMap();
-  showScreen('block');
+  // Після пройденої доріжки одразу стартуємо наступну (нові завдання),
+  // а не показуємо карту вже пройденої доріжки.
+  if (state.nextTrackAfterResult) {
+    const nextTrack = state.nextTrackAfterResult;
+    state.nextTrackAfterResult = null;
+    // Якщо наступна доріжка за межею безкоштовної версії — показуємо преміум
+    if (isTrackLocked(state.op, nextTrack)) {
+      state.track = nextTrack;
+      renderBlockMap();
+      showScreen('block');
+      return;
+    }
+    startBlock(state.op, state.grade, state.level, nextTrack, 1);
+  } else {
+    renderBlockMap();
+    showScreen('block');
+  }
 });
 
 // ----- Життя: бейджі, модалка, екран "без життів" -----

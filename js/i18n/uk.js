@@ -122,6 +122,7 @@ const UK_DICT = {
   gradeSubtitle: 'Завдання відповідають шкільній програмі',
   chooseLevel: 'Обери рівень',
   playAgain: 'Грати ще раз',
+  nextTrackAfter: 'Наступна доріжка ▶',
   toMenu: 'До меню',
   gradeSelector: (name) => `${name} ▾`,
   // Назви операцій
