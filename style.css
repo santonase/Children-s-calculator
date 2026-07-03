@@ -24,7 +24,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  height: 100%;
+  min-height: 100%;
   background: var(--bg-space);
   overflow-y: auto;
 }
@@ -1226,4 +1226,36 @@ body {
   color: var(--text-dim);
   letter-spacing: 0.02em;
   margin-top: 2px;
+}
+
+/* --- SEO-контент (внизу сторінки, під грою) --- */
+.seo-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+  color: var(--text-dim);
+  font-family: 'Nunito', sans-serif;
+  line-height: 1.6;
+}
+.seo-content h2 {
+  font-family: 'Baloo 2', sans-serif;
+  color: var(--amber);
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+}
+.seo-content h3 {
+  font-family: 'Baloo 2', sans-serif;
+  color: var(--white);
+  font-size: 1.15rem;
+  margin: 20px 0 8px;
+}
+.seo-content p { margin-bottom: 10px; font-size: 0.95rem; }
+.seo-content ul { margin: 0 0 10px; padding-left: 20px; }
+.seo-content li { margin-bottom: 6px; font-size: 0.95rem; }
+.seo-content strong { color: var(--white); }
+.seo-footer-note {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--card);
+  font-weight: 700;
 }

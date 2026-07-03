@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://santonase.github.io/Children-s-calculator/sitemap.xml
